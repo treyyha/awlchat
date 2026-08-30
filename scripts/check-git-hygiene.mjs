@@ -13,8 +13,12 @@ const stagedFiles = listGitFiles(["diff", "--cached", "--name-only", "-z"]);
 const trackedEnvFiles = trackedFiles.filter(
   (file) => /^\.env(?:\.|$)/i.test(file) && file !== ".env.example"
 );
-const stagedSecretFiles = stagedFiles.filter((file) =>
-  /(?:^|\/)(?:\.env(?:\.|$)|.*(?:credential|secret|private-key).*)/i.test(file)
+const stagedSecretFiles = stagedFiles.filter(
+  (file) =>
+    file !== ".env.example" &&
+    /(?:^|\/)(?:\.env(?:\.|$)|.*(?:credential|secret|private-key).*)/i.test(
+      file
+    )
 );
 
 const contentRules = [
