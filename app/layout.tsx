@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body
-        className="min-h-full bg-background text-foreground font-sans antialiased"
+        className="min-h-full bg-background text-foreground font-sans antialiased dark:bg-zinc-950 dark:text-zinc-100"
         // Clears the home indicator when installed; 0 everywhere else.
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >

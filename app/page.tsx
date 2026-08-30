@@ -68,8 +68,8 @@ const features = [
 
 function AppWindow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background shadow-2xl shadow-black/50">
-      <div className="flex items-center gap-2 border-b border-border bg-surface px-4 py-3">
+    <div className="overflow-hidden rounded-lg border border-border bg-background shadow-2xl shadow-black/50 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="flex items-center gap-2 border-b border-border bg-surface px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
         <span className="h-2.5 w-2.5 rounded-full bg-border" />
         <span className="h-2.5 w-2.5 rounded-full bg-border" />
         <span className="h-2.5 w-2.5 rounded-full bg-border" />
@@ -82,9 +82,9 @@ function AppWindow({ label, children }: { label: string; children: ReactNode }) 
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-border bg-surface p-4">
+    <div className="rounded border border-border bg-surface p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <p className="text-sm text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-foreground">{value}</p>
+      <p className="mt-1 text-2xl font-semibold text-foreground dark:text-zinc-100">{value}</p>
     </div>
   );
 }
@@ -109,7 +109,7 @@ function OverviewPreview() {
     <AppWindow label="app / overview">
       <div className="flex items-end justify-between">
         <div>
-          <h3 className="text-base font-semibold text-foreground">Overview</h3>
+          <h3 className="text-base font-semibold text-foreground dark:text-zinc-100">Overview</h3>
           <p className="mt-1 text-xs text-muted">
             Recent — 24 posts from @studio.store
           </p>
@@ -125,9 +125,9 @@ function OverviewPreview() {
         ))}
       </div>
 
-      <div className="mt-4 rounded border border-border bg-surface p-4">
+      <div className="mt-4 rounded border border-border bg-surface p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex items-baseline justify-between">
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-sm font-semibold text-foreground dark:text-zinc-100">
             Followers over time
           </p>
           <p className="text-xs text-muted">
@@ -153,8 +153,8 @@ function OverviewPreview() {
         </svg>
       </div>
 
-      <div className="mt-4 rounded border border-border bg-surface p-4">
-        <p className="text-sm font-semibold text-foreground">Posts</p>
+      <div className="mt-4 rounded border border-border bg-surface p-4 dark:border-zinc-800 dark:bg-zinc-900">
+        <p className="text-sm font-semibold text-foreground dark:text-zinc-100">Posts</p>
         <table className="mt-3 w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-zinc-500">
@@ -167,7 +167,7 @@ function OverviewPreview() {
           <tbody>
             {overviewPosts.map(([post, views, likes, date]) => (
               <tr key={post} className="border-b border-border last:border-0">
-                <td className="py-2 pr-3 text-foreground">{post}</td>
+                <td className="py-2 pr-3 text-foreground dark:text-zinc-100">{post}</td>
                 <td className="py-2 px-3 text-right text-muted">{views}</td>
                 <td className="py-2 px-3 text-right text-muted">{likes}</td>
                 <td className="py-2 pl-3 text-right text-zinc-500">{date}</td>
@@ -182,9 +182,9 @@ function OverviewPreview() {
 
 function MatchedCommentCard() {
   return (
-    <div className="w-64 rounded-lg border border-border bg-surface p-4 shadow-2xl shadow-black/50">
+    <div className="w-64 rounded-lg border border-border bg-surface p-4 shadow-2xl shadow-black/50 dark:border-zinc-800 dark:bg-zinc-900">
       <p className="text-xs text-muted">New comment</p>
-      <p className="mt-1 text-sm font-semibold text-foreground">@maya.co</p>
+      <p className="mt-1 text-sm font-semibold text-foreground dark:text-zinc-100">@maya.co</p>
       <p className="mt-1 text-sm text-muted">LINK please</p>
       <div className="mt-3 border-t border-border pt-3">
         <p className="text-xs text-muted">
@@ -227,7 +227,7 @@ function DashboardPreview() {
   const maxDM = Math.max(...dashboardChart.map(([, n]) => n));
   return (
     <AppWindow label="app / dashboard">
-      <h3 className="text-base font-semibold text-foreground">Hello, Maya!</h3>
+      <h3 className="text-base font-semibold text-foreground dark:text-zinc-100">Hello, Maya!</h3>
       <p className="mt-1 text-xs text-muted">2 connected accounts · 340 contacts</p>
 
       <div className="mt-4 grid grid-cols-3 gap-3">
@@ -236,7 +236,7 @@ function DashboardPreview() {
         ))}
       </div>
 
-      <div className="mt-4 rounded border border-border bg-surface p-4">
+      <div className="mt-4 rounded border border-border bg-surface p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <p className="text-sm font-semibold text-foreground">DMs — Last 7 Days</p>
         <div className="mt-4 flex h-32 items-end gap-2">
           {dashboardChart.map(([day, n]) => (
@@ -252,7 +252,7 @@ function DashboardPreview() {
         </div>
       </div>
 
-      <div className="mt-4 rounded border border-border bg-surface p-4">
+      <div className="mt-4 rounded border border-border bg-surface p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <p className="text-sm font-semibold text-foreground">Recent Activity</p>
         <div className="mt-3 space-y-2">
           {dashboardActivity.map(([user, automation, status, color]) => (
@@ -260,7 +260,7 @@ function DashboardPreview() {
               key={user}
               className="flex items-center justify-between gap-3 border-b border-border py-2 text-sm last:border-0"
             >
-              <span className="truncate text-foreground">{user}</span>
+              <span className="truncate text-foreground dark:text-zinc-100">{user}</span>
               <span className="truncate text-muted">{automation}</span>
               <span className={`text-sm ${color}`}>{status}</span>
             </div>
@@ -288,13 +288,13 @@ async function getGitHubStars(): Promise<number | null> {
 export default async function Home() {
   const stars = await getGitHubStars();
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen bg-background text-foreground dark:bg-zinc-950 dark:text-zinc-100">
       <DemoNotice variant="banner" />
 
-      <header className="sticky top-0 z-40 border-b border-border bg-background">
+      <header className="sticky top-0 z-40 border-b border-border bg-background dark:border-zinc-800 dark:bg-zinc-950">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="AwlChat home">
-            <span className="text-lg font-bold text-foreground">AwlChat</span>
+            <span className="text-lg font-bold text-foreground dark:text-zinc-100">AwlChat</span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -303,7 +303,7 @@ export default async function Home() {
               href={GITHUB_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition hover:text-foreground"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition hover:text-foreground dark:text-zinc-400 dark:hover:text-zinc-100"
               aria-label="View AwlChat on GitHub"
             >
               <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 fill-current">
@@ -323,15 +323,15 @@ export default async function Home() {
 
       <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-5 pb-16 pt-12 sm:px-6 sm:pt-18 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:pb-24">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 border border-border bg-surface px-3 py-2 text-sm font-semibold text-muted">
+          <div className="inline-flex items-center gap-2 border border-border bg-surface px-3 py-2 text-sm font-semibold text-muted dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
             Open source · Official Meta API
           </div>
 
-          <h1 className="mt-7 text-balance text-5xl font-black leading-[1.02] text-foreground sm:text-6xl lg:text-7xl">
+          <h1 className="mt-7 text-balance text-5xl font-black leading-[1.02] text-foreground dark:text-zinc-100 sm:text-6xl lg:text-7xl">
             Make every comment start the right DM
           </h1>
 
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted dark:text-zinc-400">
             Open-sourced ManyChat. When someone comments your keyword on a post
             or reel, they get your DM a second later. Free, self-hosted, and
             built on the official Instagram API.
@@ -346,7 +346,7 @@ export default async function Home() {
             </Link>
             <a
               href="#how"
-              className="inline-flex items-center justify-center border border-border bg-surface px-6 py-3 text-sm font-bold text-foreground transition hover:border-border-hover hover:bg-surface-hover"
+              className="inline-flex items-center justify-center border border-border bg-surface px-6 py-3 text-sm font-bold text-foreground transition hover:border-border-hover hover:bg-surface-hover dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-700 dark:hover:bg-zinc-800"
             >
               See how it works
             </a>
@@ -354,9 +354,9 @@ export default async function Home() {
 
           <dl className="mt-10 grid max-w-xl grid-cols-3 gap-3">
             {heroStats.map((stat) => (
-              <div key={stat.label} className="border border-border bg-surface p-4">
-                <dt className="text-2xl font-black text-foreground">{stat.value}</dt>
-                <dd className="mt-1 text-xs leading-5 text-muted">{stat.label}</dd>
+              <div key={stat.label} className="border border-border bg-surface p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                <dt className="text-2xl font-black text-foreground dark:text-zinc-100">{stat.value}</dt>
+                <dd className="mt-1 text-xs leading-5 text-muted dark:text-zinc-400">{stat.label}</dd>
               </div>
             ))}
           </dl>
@@ -374,10 +374,10 @@ export default async function Home() {
         <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
           <div>
             <p className="text-sm font-bold uppercase text-orange-600">How it works</p>
-            <h2 className="mt-3 text-4xl font-black leading-tight text-foreground sm:text-5xl">
+            <h2 className="mt-3 text-4xl font-black leading-tight text-foreground dark:text-zinc-100 sm:text-5xl">
               A comment in, a DM out
             </h2>
-            <p className="mt-5 text-base leading-8 text-muted">
+            <p className="mt-5 text-base leading-8 text-muted dark:text-zinc-400">
               Three steps. Connect an account, build a campaign, and let it run.
               The webhook handles it live and the poll sweeps up whatever the
               webhook misses.
@@ -388,12 +388,12 @@ export default async function Home() {
             {flowSteps.map((step) => (
               <article
                 key={step.title}
-                className="grid gap-4 border border-border bg-surface p-5 sm:grid-cols-[120px_1fr]"
+                className="grid gap-4 border border-border bg-surface p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:grid-cols-[120px_1fr]"
               >
                 <p className="text-sm font-bold text-orange-600">{step.eyebrow}</p>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted">{step.description}</p>
+                  <h3 className="text-xl font-bold text-foreground dark:text-zinc-100">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted dark:text-zinc-400">{step.description}</p>
                 </div>
               </article>
             ))}
@@ -401,16 +401,16 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-surface py-20">
+      <section className="border-y border-border bg-surface py-20 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8 lg:items-center">
           <DashboardPreview />
 
           <div>
             <p className="text-sm font-bold uppercase text-orange-600">The dashboard</p>
-            <h2 className="mt-3 text-4xl font-black leading-tight text-foreground sm:text-5xl">
+            <h2 className="mt-3 text-4xl font-black leading-tight text-foreground dark:text-zinc-100 sm:text-5xl">
               See exactly what happened
             </h2>
-            <p className="mt-5 text-base leading-8 text-muted">
+            <p className="mt-5 text-base leading-8 text-muted dark:text-zinc-400">
               Every comment event is traceable: queued, matched, sent, skipped,
               failed, or rate-limited. No black box.
             </p>
@@ -421,10 +421,10 @@ export default async function Home() {
       <section id="features" className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-sm font-bold uppercase text-orange-600">What&rsquo;s included</p>
-          <h2 className="mt-3 text-4xl font-black leading-tight text-foreground sm:text-5xl">
+          <h2 className="mt-3 text-4xl font-black leading-tight text-foreground dark:text-zinc-100 sm:text-5xl">
             Everything, no tiers
           </h2>
-          <p className="mt-5 text-base leading-8 text-muted">
+          <p className="mt-5 text-base leading-8 text-muted dark:text-zinc-400">
             It is self-hosted and open source, so there is nothing to unlock. You
             run it, you own it.
           </p>
@@ -434,7 +434,7 @@ export default async function Home() {
           {features.map((feature) => (
             <div
               key={feature}
-              className="border border-border bg-surface p-4 text-sm font-semibold text-foreground"
+              className="border border-border bg-surface p-4 text-sm font-semibold text-foreground dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
             >
               {feature}
             </div>
@@ -477,7 +477,7 @@ export default async function Home() {
             </Link>
             <a
               href={GITHUB_URL}
-              className="inline-flex items-center justify-center border border-border bg-surface px-6 py-3 text-sm font-bold text-foreground transition hover:border-border-hover hover:bg-surface-hover"
+              className="inline-flex items-center justify-center border border-border bg-surface px-6 py-3 text-sm font-bold text-foreground transition hover:border-border-hover hover:bg-surface-hover dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-700 dark:hover:bg-zinc-800"
             >
               View on GitHub
             </a>
