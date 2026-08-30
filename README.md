@@ -107,14 +107,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
 
 ## Credits
 
-Built and maintained by Diwen Huang.
+AwlChat is maintained by Trey Ha — GitHub: [@treyyha](https://github.com/treyyha)
+
+AwlChat is based on OpenReply, which was initially forked from [instagram-comment-to-dm](https://github.com/im-anishraj/instagram-comment-to-dm) by [Anish Raj](https://github.com/im-anishraj), also MIT licensed, and has been substantially built upon since. OpenReply was built and maintained by [Diwen Huang](https://github.com/diwenne).
 
 - GitHub: [@diwenne](https://github.com/diwenne)
 - Website: [diwenhuang.ca](https://diwenhuang.ca)
 - X: [@diwenne](https://x.com/diwennee)
 - Instagram: [@devdiwen](https://instagram.com/devdiwen)
-
-AwlChat is based on OpenReply, which was initially forked from [instagram-comment-to-dm](https://github.com/im-anishraj/instagram-comment-to-dm) by [Anish Raj](https://github.com/im-anishraj), also MIT licensed, and has been substantially built upon since. OpenReply was built and maintained by [Diwen Huang](https://github.com/diwenne).
 
 ## Star the repo
 
