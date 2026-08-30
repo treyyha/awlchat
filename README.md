@@ -1,22 +1,22 @@
 <div align="center">
 
-# OpenReply
+# AwlChat
 
-Open-sourced ManyChat for Instagram comment-to-DM automation.
+Open-source ManyChat alternative for Instagram comment-to-DM automation.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/diwenne/openreply?style=flat&color=black)](https://github.com/diwenne/openreply/stargazers)
+[![Stars](https://img.shields.io/github/stars/treyyha/awlchat?style=flat&color=black)](https://github.com/treyyha/awlchat/stargazers)
 [![Built with Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
 
 </div>
 
-Someone comments `LINK` on your reel, and they get a DM with your link a second later. That is the whole idea. OpenReply watches the comments on your Instagram posts, and when a comment matches a keyword you set, it sends that person a private reply through the official Meta API. You can also post a public reply under the comment at the same time.
+Someone comments `LINK` on your reel, and they get a DM with your link a second later. That is the whole idea. AwlChat watches the comments on your Instagram posts, and when a comment matches a keyword you set, it sends that person a private reply through the official Meta API. You can also post a public reply under the comment at the same time.
 
-ManyChat does this and charges a monthly fee. OpenReply is the same core feature, free, running on your own infrastructure, with no seat limits and no plan caps.
+ManyChat does this and charges a monthly fee. AwlChat provides the same core feature, free, running on your own infrastructure, with no seat limits and no plan caps.
 
-> **OpenReply is self-hosted. You have to deploy your own copy.**
+> **AwlChat is self-hosted. You have to deploy your own copy.**
 >
-> [openreply.diwen.dev](https://openreply.diwen.dev) is a demo of the dashboard, not a service you can sign up for. Creating an account there will never send a DM for you, and there is no hosted plan to upgrade to.
+> There is no shared AwlChat instance to sign up for. Deploy your own copy on your own domain so your Meta app can connect to it.
 >
 > Instagram automation runs against *your* Meta app, and Meta ties that app to a domain and a webhook URL you control. So a working instance means: your fork deployed, your domain pointed at it, your Meta app created, and your webhook registered. [docs/setup.md](docs/setup.md) walks through all of it.
 
@@ -26,7 +26,7 @@ ManyChat does this and charges a monthly fee. OpenReply is the same core feature
 
 Comment-to-DM is one feature, but every tool that offers it wants a recurring subscription for it. The actual work is a webhook, a keyword match, and one API call to Meta. That does not need to cost anything to run for a single account.
 
-OpenReply is built around Meta's official Instagram private replies. It does not scrape, it does not automate a browser, and it never asks for an Instagram password. That keeps your account inside Meta's rules, which matters if you care about not getting flagged.
+AwlChat is built around Meta's official Instagram private replies. It does not scrape, it does not automate a browser, and it never asks for an Instagram password. That keeps your account inside Meta's rules, which matters if you care about not getting flagged.
 
 ## Features
 
@@ -35,7 +35,7 @@ OpenReply is built around Meta's official Instagram private replies. It does not
 - DM and Story reply triggers. The same keywords can also fire on an inbound DM, which covers text replies to your Stories, since Instagram delivers those as DMs. That makes `Reply LINK to this Story` work with no post involved. Turn it on per campaign, and subscribe to the `messages` webhook field when you set up your Meta app.
 - Tracked links. Swap a link for a tracked redirect and see clicks and CTR per campaign.
 - Two link buttons. Send up to two tappable link buttons in one DM, each a separate tracked link with its own click stats.
-- Follow gate. Optionally require a follow before you hand over the link. The DM asks the commenter to follow and tap a button; on tap, OpenReply checks Meta's `is_user_follow_business` flag and only sends the link once they follow, re-prompting until then. It fails open (sends the link anyway) when Instagram does not return follow status, so a real follower is never trapped.
+- Follow gate. Optionally require a follow before you hand over the link. The DM asks the commenter to follow and tap a button; on tap, AwlChat checks Meta's `is_user_follow_business` flag and only sends the link once they follow, re-prompting until then. It fails open (sends the link anyway) when Instagram does not return follow status, so a real follower is never trapped.
 - Personalization. Use `{username}` in your message to greet the commenter by name.
 - Per-account rate limiting. Stays under Meta's documented cap of 750 private replies per hour, and queues the overflow instead of dropping it.
 - Multiple Instagram accounts. Connect several professional accounts under one workspace, each with its own limits.
@@ -48,8 +48,8 @@ OpenReply is built around Meta's official Instagram private replies. It does not
 ## How it works
 
 1. Someone comments on your Instagram post or reel, or DMs you, or replies to your Story.
-2. Meta sends a webhook to your OpenReply instance.
-3. OpenReply checks the text against your active campaigns.
+2. Meta sends a webhook to your AwlChat instance.
+3. AwlChat checks the text against your active campaigns.
 4. On a keyword match, it queues a job.
 5. A background worker sends the private reply, and the public reply if you enabled one.
 
@@ -65,13 +65,13 @@ The honest version: the code deploys in minutes, but the Meta app setup is the p
 
 This is the part people skip. There is no shared instance to join — the button below creates *your* deployment, on *your* domain, which is the only thing your Meta app is allowed to talk to.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/diwenne/openreply)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/treyyha/awlchat)
 
 ### Run it locally
 
 ```bash
-git clone https://github.com/diwenne/openreply.git
-cd openreply
+git clone https://github.com/treyyha/awlchat.git
+cd awlchat
 npm install
 cp .env.example .env      # then fill in the values, see docs/setup.md
 docker-compose up -d      # starts Postgres and Redis
@@ -114,11 +114,11 @@ Built and maintained by Diwen Huang.
 - X: [@diwenne](https://x.com/diwennee)
 - Instagram: [@devdiwen](https://instagram.com/devdiwen)
 
-OpenReply was initially forked from [instagram-comment-to-dm](https://github.com/im-anishraj/instagram-comment-to-dm) by [Anish Raj](https://github.com/im-anishraj), also MIT licensed, and has been substantially built upon since.
+AwlChat is based on OpenReply, which was initially forked from [instagram-comment-to-dm](https://github.com/im-anishraj/instagram-comment-to-dm) by [Anish Raj](https://github.com/im-anishraj), also MIT licensed, and has been substantially built upon since. OpenReply was built and maintained by [Diwen Huang](https://github.com/diwenne).
 
 ## Star the repo
 
-If OpenReply is useful to you, star it. It is the simplest way to help the project reach the next person looking for a free way to do this.
+If AwlChat is useful to you, star it. It is the simplest way to help the project reach the next person looking for a free way to do this.
 
 ## License
 
