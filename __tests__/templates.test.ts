@@ -8,14 +8,14 @@ import {
 describe("campaign templates", () => {
   it("ships the public launch template set", () => {
     expect(getCampaignTemplateSlugs()).toEqual([
-      "dtc-product-link",
-      "real-estate-lead-form",
-      "fitness-plan",
-      "course-webinar",
-      "beauty-price-list",
-      "restaurant-menu",
-      "event-rsvp",
-      "creator-media-kit",
+      "freebie-drop",
+      "digital-offer-link",
+      "waitlist-launch",
+      "discovery-call",
+      "newsletter-community",
+      "live-workshop",
+      "brand-collab-kit",
+      "content-os-stack",
     ]);
   });
 
@@ -30,9 +30,7 @@ describe("campaign templates", () => {
   });
 
   it("finds templates by slug and returns null for unknown slugs", () => {
-    expect(getCampaignTemplate("dtc-product-link")?.title).toBe(
-      "DTC Product Link Drop"
-    );
+    expect(getCampaignTemplate("freebie-drop")?.title).toBe("Freebie Drop");
     expect(getCampaignTemplate("missing-template")).toBeNull();
     expect(getCampaignTemplate(undefined)).toBeNull();
   });
