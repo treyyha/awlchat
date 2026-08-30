@@ -238,6 +238,7 @@ async function sweepCampaign(
         commenterName: c.from?.username,
         mediaId,
         source: "POLLING",
+        triggerType: "COMMENT",
       });
       stat.enqueued += 1;
     }

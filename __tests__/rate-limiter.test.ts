@@ -37,11 +37,14 @@ import {
   allowInvalidWebhookRequest,
   allowMagicLinkRequest,
   claimWebhookDelivery,
+  reserveAutomatedDmCooldown,
+  releaseAutomatedDmCooldown,
   INVALID_WEBHOOK_MAX,
   INVALID_WEBHOOK_WINDOW,
   MAGIC_LINK_MAX,
   MAGIC_LINK_WINDOW,
   WEBHOOK_REPLAY_WINDOW,
+  AUTOMATED_DM_DEDUP_TTL_SECONDS,
 } from "../lib/utils/rate-limiter";
 
 beforeEach(() => {
@@ -185,6 +188,39 @@ describe("public request rate limits", () => {
       "EX",
       WEBHOOK_REPLAY_WINDOW,
       "NX"
+    );
+  });
+
+  it("atomically reserves the automated DM cooldown for 24 hours", async () => {
+    mockSet.mockResolvedValue("OK");
+
+    await expect(
+      reserveAutomatedDmCooldown("ig_456", "user_999")
+    ).resolves.toBe(true);
+    expect(mockSet).toHaveBeenCalledWith(
+      "dedup:automated-dm:ig_456:user_999",
+      "1",
+      "EX",
+      AUTOMATED_DM_DEDUP_TTL_SECONDS,
+      "NX"
+    );
+  });
+
+  it("returns false when the automated DM cooldown already exists", async () => {
+    mockSet.mockResolvedValue(null);
+
+    await expect(
+      reserveAutomatedDmCooldown("ig_456", "user_999")
+    ).resolves.toBe(false);
+  });
+
+  it("releases an automated DM cooldown after a failed send", async () => {
+    mockDel.mockResolvedValue(1);
+
+    await releaseAutomatedDmCooldown("ig_456", "user_999");
+
+    expect(mockDel).toHaveBeenCalledWith(
+      "dedup:automated-dm:ig_456:user_999"
     );
   });
 });

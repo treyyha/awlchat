@@ -27,7 +27,11 @@ import {
 } from "@/lib/meta/client";
 import { decryptToken } from "@/lib/meta/oauth";
 import { matchKeywords } from "@/lib/utils/keyword-matcher";
-import { reserveDMSlot } from "@/lib/utils/rate-limiter";
+import {
+  releaseAutomatedDmCooldown,
+  reserveAutomatedDmCooldown,
+  reserveDMSlot,
+} from "@/lib/utils/rate-limiter";
 import {
   releaseWorkspaceDMReservation,
   reserveWorkspaceDMSend,
@@ -40,6 +44,19 @@ import {
 } from "@/lib/tracking/message";
 
 const BACKOFF_DELAYS = [5 * 60 * 1000, 15 * 60 * 1000, 45 * 60 * 1000];
+const AUTOMATED_DM_DEDUP_REASON =
+  "Automated comment/Story DM already sent to this user within the last 24 hours.";
+
+async function releaseAutomatedDmCooldownSafely(
+  instagramAccountId: string,
+  userId: string
+): Promise<void> {
+  try {
+    await releaseAutomatedDmCooldown(instagramAccountId, userId);
+  } catch (error) {
+    console.error("[DM Worker] Failed to release automated DM cooldown:", error);
+  }
+}
 
 function formatError(error: unknown): string {
   if (error instanceof MetaApiError) {
@@ -434,7 +451,37 @@ async function processComment(job: Job<ProcessCommentJob>): Promise<void> {
       continue;
     }
 
-    const usage = await reserveWorkspaceDMSend(automation.workspaceId);
+    const cooldownReserved = await reserveAutomatedDmCooldown(
+      instagramAccountId,
+      commenterId
+    );
+    if (!cooldownReserved) {
+      await prisma.dmLog.update({
+        where: {
+          automationId_commentId: {
+            automationId: automation.id,
+            commentId,
+          },
+        },
+        data: {
+          status: "SKIPPED_DEDUP",
+          matchedKeyword: matchResult.matchedKeyword,
+          errorMessage: AUTOMATED_DM_DEDUP_REASON,
+        },
+      });
+      continue;
+    }
+
+    let usage;
+    try {
+      usage = await reserveWorkspaceDMSend(automation.workspaceId);
+    } catch (error) {
+      await releaseAutomatedDmCooldownSafely(
+        instagramAccountId,
+        commenterId
+      );
+      throw error;
+    }
     if (!usage.allowed) {
       await prisma.dmLog.update({
         where: {
@@ -449,6 +496,10 @@ async function processComment(job: Job<ProcessCommentJob>): Promise<void> {
           errorMessage: `Monthly DM limit reached (${usage.limit})`,
         },
       });
+      await releaseAutomatedDmCooldownSafely(
+        instagramAccountId,
+        commenterId
+      );
       continue;
     }
 
@@ -459,6 +510,10 @@ async function processComment(job: Job<ProcessCommentJob>): Promise<void> {
       await releaseWorkspaceDMReservation(
         automation.workspaceId,
         usage.periodStart
+      );
+      await releaseAutomatedDmCooldownSafely(
+        instagramAccountId,
+        commenterId
       );
       await prisma.dmLog.update({
         where: {
@@ -480,6 +535,10 @@ async function processComment(job: Job<ProcessCommentJob>): Promise<void> {
       await releaseWorkspaceDMReservation(
         automation.workspaceId,
         usage.periodStart
+      );
+      await releaseAutomatedDmCooldownSafely(
+        instagramAccountId,
+        commenterId
       );
 
       if (rateLimit.shouldSkip) {
@@ -544,10 +603,24 @@ async function processComment(job: Job<ProcessCommentJob>): Promise<void> {
     // else gets the "follow me first" prompt (re-verified on tap).
     let sendFollowPrompt = false;
     if (automation.requireFollow && !useOpeningDm) {
-      const alreadyFollows = await getUserFollowStatus(accessToken, commenterId);
+      let alreadyFollows: boolean | null;
+      try {
+        alreadyFollows = await getUserFollowStatus(accessToken, commenterId);
+      } catch (error) {
+        await releaseWorkspaceDMReservation(
+          automation.workspaceId,
+          usage.periodStart
+        );
+        await releaseAutomatedDmCooldownSafely(
+          instagramAccountId,
+          commenterId
+        );
+        throw error;
+      }
       sendFollowPrompt = alreadyFollows !== true;
     }
 
+    let automatedDmSent = false;
     try {
       if (useOpeningDm) {
         const openingText = renderMessageWithTracking({
@@ -644,6 +717,7 @@ async function processComment(job: Job<ProcessCommentJob>): Promise<void> {
         );
       }
 
+      automatedDmSent = true;
       await prisma.dmLog.update({
         where: {
           automationId_commentId: {
@@ -662,6 +736,12 @@ async function processComment(job: Job<ProcessCommentJob>): Promise<void> {
         automation.workspaceId,
         usage.periodStart
       );
+      if (!automatedDmSent) {
+        await releaseAutomatedDmCooldownSafely(
+          instagramAccountId,
+          commenterId
+        );
+      }
 
       await prisma.dmLog.update({
         where: {
@@ -944,7 +1024,13 @@ async function processFollowUp(job: Job<ProcessFollowUpJob>): Promise<void> {
  * Dedup is per inbound message id, so each message triggers at most one reply.
  */
 async function processMessage(job: Job<ProcessMessageJob>): Promise<void> {
-  const { instagramAccountId, messageId, messageText, senderId } = job.data;
+  const {
+    instagramAccountId,
+    messageId,
+    messageText,
+    senderId,
+    triggerType = "INBOUND_DM",
+  } = job.data;
 
   const automations = await prisma.automation.findMany({
     where: {
@@ -1057,6 +1143,31 @@ async function processMessage(job: Job<ProcessMessageJob>): Promise<void> {
     });
     const commenterName = priorLog?.commenterName ?? null;
 
+    const cooldownReserved =
+      triggerType === "STORY_REPLY"
+        ? await reserveAutomatedDmCooldown(instagramAccountId, senderId)
+        : false;
+    if (triggerType === "STORY_REPLY" && !cooldownReserved) {
+      await prisma.dmLog.upsert({
+        where: {
+          automationId_commentId: {
+            automationId: automation.id,
+            commentId: dedupeId,
+          },
+        },
+        create: {
+          ...logBase,
+          status: "SKIPPED_DEDUP",
+          errorMessage: AUTOMATED_DM_DEDUP_REASON,
+        },
+        update: {
+          status: "SKIPPED_DEDUP",
+          errorMessage: AUTOMATED_DM_DEDUP_REASON,
+        },
+      });
+      continue;
+    }
+
     // Follow gate: anyone not confirmed as a follower gets the prompt instead of
     // the link, with the same `followcheck:` button that re-verifies on tap.
     // `null` (unverifiable) prompts too — this is first contact, exactly like a
@@ -1066,11 +1177,27 @@ async function processMessage(job: Job<ProcessMessageJob>): Promise<void> {
     // anyone whose status the API happens not to resolve.
     let sendFollowPrompt = false;
     if (automation.requireFollow) {
-      const follows = await getUserFollowStatus(accessToken, senderId);
+      let follows: boolean | null;
+      try {
+        follows = await getUserFollowStatus(accessToken, senderId);
+      } catch (error) {
+        if (cooldownReserved) {
+          await releaseAutomatedDmCooldownSafely(instagramAccountId, senderId);
+        }
+        throw error;
+      }
       sendFollowPrompt = follows !== true;
     }
 
-    const usage = await reserveWorkspaceDMSend(automation.workspaceId);
+    let usage;
+    try {
+      usage = await reserveWorkspaceDMSend(automation.workspaceId);
+    } catch (error) {
+      if (cooldownReserved) {
+        await releaseAutomatedDmCooldownSafely(instagramAccountId, senderId);
+      }
+      throw error;
+    }
     if (!usage.allowed) {
       await prisma.dmLog.upsert({
         where: {
@@ -1089,9 +1216,13 @@ async function processMessage(job: Job<ProcessMessageJob>): Promise<void> {
           errorMessage: `Monthly DM limit reached (${usage.limit})`,
         },
       });
+      if (cooldownReserved) {
+        await releaseAutomatedDmCooldownSafely(instagramAccountId, senderId);
+      }
       continue;
     }
 
+    let automatedDmSent = false;
     try {
       if (sendFollowPrompt) {
         const promptText = renderMessageWithoutLink({
@@ -1108,6 +1239,7 @@ async function processMessage(job: Job<ProcessMessageJob>): Promise<void> {
           automation.followPromptButtonLabel || "I'm following ✅",
           `followcheck:${automation.id}`
         );
+        automatedDmSent = true;
       } else {
         await sendRevealDirectMessage(
           accessToken,
@@ -1116,6 +1248,7 @@ async function processMessage(job: Job<ProcessMessageJob>): Promise<void> {
           commenterName,
           "message trigger"
         );
+        automatedDmSent = true;
 
         // The link has been delivered, so the appreciation follow-up applies
         // here exactly as it does after a button tap. Not scheduled behind the
@@ -1161,6 +1294,9 @@ async function processMessage(job: Job<ProcessMessageJob>): Promise<void> {
         automation.workspaceId,
         usage.periodStart
       );
+      if (cooldownReserved && !automatedDmSent) {
+        await releaseAutomatedDmCooldownSafely(instagramAccountId, senderId);
+      }
       await prisma.dmLog.upsert({
         where: {
           automationId_commentId: {

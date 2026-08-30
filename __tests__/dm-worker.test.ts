@@ -12,6 +12,8 @@ const {
   mockDecryptToken,
   mockMatchKeywords,
   mockReserveDMSlot,
+  mockReserveAutomatedDmCooldown,
+  mockReleaseAutomatedDmCooldown,
   mockQueueAdd,
   mockReserveWorkspaceDMSend,
   mockReleaseWorkspaceDMReservation,
@@ -45,6 +47,8 @@ const {
   mockDecryptToken: vi.fn(),
   mockMatchKeywords: vi.fn(),
   mockReserveDMSlot: vi.fn(),
+  mockReserveAutomatedDmCooldown: vi.fn(),
+  mockReleaseAutomatedDmCooldown: vi.fn(),
   mockQueueAdd: vi.fn(),
   mockReserveWorkspaceDMSend: vi.fn(),
   mockReleaseWorkspaceDMReservation: vi.fn(),
@@ -94,6 +98,8 @@ vi.mock("@/lib/utils/keyword-matcher", () => ({
 
 vi.mock("@/lib/utils/rate-limiter", () => ({
   reserveDMSlot: mockReserveDMSlot,
+  reserveAutomatedDmCooldown: mockReserveAutomatedDmCooldown,
+  releaseAutomatedDmCooldown: mockReleaseAutomatedDmCooldown,
 }));
 
 vi.mock("@/lib/billing/usage", () => ({
@@ -247,6 +253,8 @@ beforeEach(() => {
     shouldSkip: false,
     reserved: true,
   });
+  mockReserveAutomatedDmCooldown.mockResolvedValue(true);
+  mockReleaseAutomatedDmCooldown.mockResolvedValue(undefined);
   mockReleaseWorkspaceDMReservation.mockResolvedValue({ count: 1 });
   mockSendPrivateReply.mockResolvedValue({
     recipient_id: "commenter_999",
@@ -337,6 +345,10 @@ describe("DM Worker — Full Pipeline", () => {
       true
     );
     expect(mockReserveWorkspaceDMSend).toHaveBeenCalledWith("workspace_123");
+    expect(mockReserveAutomatedDmCooldown).toHaveBeenCalledWith(
+      "ig_456",
+      "commenter_999"
+    );
     expect(mockReserveDMSlot).toHaveBeenCalledWith("ig_456", 0);
     expect(mockDecryptToken).toHaveBeenCalledWith("encrypted_token_abc");
     expect(mockSendPrivateReply).toHaveBeenCalledWith(
@@ -390,6 +402,27 @@ describe("DM Worker — Full Pipeline", () => {
     expect(mockReserveWorkspaceDMSend).not.toHaveBeenCalled();
   });
 
+  it("should skip a comment when the user already has a 24-hour cooldown", async () => {
+    mockReserveAutomatedDmCooldown.mockResolvedValue(false);
+
+    const processor = getProcessor();
+    await processor(createMockJob());
+
+    expect(mockSendPrivateReply).not.toHaveBeenCalled();
+    expect(mockReserveWorkspaceDMSend).not.toHaveBeenCalled();
+    expect(mockReserveDMSlot).not.toHaveBeenCalled();
+    expect(mockPrisma.dmLog.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          status: "SKIPPED_DEDUP",
+          matchedKeyword: "LINK",
+          errorMessage:
+            "Automated comment/Story DM already sent to this user within the last 24 hours.",
+        },
+      })
+    );
+  });
+
   it("should skip when monthly plan limit is reached", async () => {
     mockReserveWorkspaceDMSend.mockResolvedValue({
       allowed: false,
@@ -428,6 +461,10 @@ describe("DM Worker — Full Pipeline", () => {
     expect(mockReleaseWorkspaceDMReservation).toHaveBeenCalledWith(
       "workspace_123",
       usagePeriodStart
+    );
+    expect(mockReleaseAutomatedDmCooldown).toHaveBeenCalledWith(
+      "ig_456",
+      "commenter_999"
     );
     expect(mockSendPrivateReply).not.toHaveBeenCalled();
     expect(mockQueueAdd).toHaveBeenCalledWith(
@@ -479,6 +516,10 @@ describe("DM Worker — Full Pipeline", () => {
     expect(mockReleaseWorkspaceDMReservation).toHaveBeenCalledWith(
       "workspace_123",
       usagePeriodStart
+    );
+    expect(mockReleaseAutomatedDmCooldown).toHaveBeenCalledWith(
+      "ig_456",
+      "commenter_999"
     );
     expect(mockPrisma.dmLog.update).toHaveBeenCalledWith({
       where: {
@@ -845,6 +886,7 @@ describe("DM Worker — Full Pipeline", () => {
         update: expect.objectContaining({ status: "FAILED" }),
       })
     );
+    expect(mockReserveAutomatedDmCooldown).not.toHaveBeenCalled();
   });
 });
 
@@ -976,6 +1018,51 @@ describe("DM Worker — DM keyword trigger", () => {
     );
     // Never a private reply — there is no comment to reply to.
     expect(mockSendPrivateReply).not.toHaveBeenCalled();
+    expect(mockReserveAutomatedDmCooldown).not.toHaveBeenCalled();
+  });
+
+  it("should reserve the user cooldown for a Story reply", async () => {
+    const processor = getProcessor();
+    await processor(
+      createMockMessageJob({
+        triggerType: "STORY_REPLY",
+      })
+    );
+
+    expect(mockReserveAutomatedDmCooldown).toHaveBeenCalledWith(
+      "ig_456",
+      "commenter_999"
+    );
+    expect(mockSendDirectMessage).toHaveBeenCalled();
+  });
+
+  it("should let matching Story campaigns share one user cooldown", async () => {
+    mockPrisma.automation.findMany.mockResolvedValue([
+      dmTriggerAutomation,
+      { ...dmTriggerAutomation, id: "auto_790" },
+    ]);
+    mockReserveAutomatedDmCooldown
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+
+    const processor = getProcessor();
+    await processor(
+      createMockMessageJob({
+        triggerType: "STORY_REPLY",
+      })
+    );
+
+    expect(mockReserveAutomatedDmCooldown).toHaveBeenCalledTimes(2);
+    expect(mockSendDirectMessage).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.dmLog.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: {
+          status: "SKIPPED_DEDUP",
+          errorMessage:
+            "Automated comment/Story DM already sent to this user within the last 24 hours.",
+        },
+      })
+    );
   });
 
   it("should not reply when the DM text matches no keyword", async () => {
@@ -1101,13 +1188,17 @@ describe("DM Worker — DM keyword trigger", () => {
     mockSendDirectMessage.mockRejectedValue(new Error("Meta is down"));
 
     const processor = getProcessor();
-    await expect(processor(createMockMessageJob())).rejects.toThrow(
-      "Meta is down"
-    );
+    await expect(
+      processor(createMockMessageJob({ triggerType: "STORY_REPLY" }))
+    ).rejects.toThrow("Meta is down");
 
     expect(mockReleaseWorkspaceDMReservation).toHaveBeenCalledWith(
       "workspace_123",
       usagePeriodStart
+    );
+    expect(mockReleaseAutomatedDmCooldown).toHaveBeenCalledWith(
+      "ig_456",
+      "commenter_999"
     );
     expect(mockPrisma.dmLog.upsert).toHaveBeenCalledWith(
       expect.objectContaining({

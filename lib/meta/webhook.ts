@@ -83,6 +83,10 @@ interface WebhookEntry {
       is_deleted?: boolean;
       is_unsupported?: boolean;
       attachments?: Array<{ type?: string }>;
+      reply_to?: {
+        story?: { id?: string };
+        mid?: string;
+      };
     };
   }>;
 }
@@ -92,6 +96,7 @@ export interface WebhookMessageEvent {
   messageId: string;
   messageText: string;
   senderId: string;
+  triggerType: "STORY_REPLY" | "INBOUND_DM";
 }
 
 export interface WebhookPostbackEvent {
@@ -233,6 +238,7 @@ export function parseMessageEvents(
         messageId,
         messageText: text,
         senderId,
+        triggerType: message.reply_to?.story ? "STORY_REPLY" : "INBOUND_DM",
       });
     }
   }
