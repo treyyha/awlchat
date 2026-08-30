@@ -4,14 +4,14 @@ import Link from "next/link";
 import { DemoNotice } from "@/components/demo-notice";
 
 export const metadata: Metadata = {
-  title: "OpenReply - Open source Instagram comment-to-DM automation",
+  title: "AwlChat - Instagram comment-to-DM automation",
   description:
     "A free, self-hosted ManyChat alternative. Turn Instagram keyword comments into automatic private replies using the official Meta API.",
 };
 
-const GITHUB_URL = "https://github.com/diwenne/openreply";
+const GITHUB_URL = "https://github.com/treyyha/awlchat";
 const SETUP_DOCS_URL =
-  "https://github.com/diwenne/openreply/blob/main/docs/setup.md";
+  "https://github.com/treyyha/awlchat/blob/main/docs/setup.md";
 
 function formatStars(count: number): string {
   if (count >= 1000) {
@@ -272,7 +272,7 @@ function DashboardPreview() {
 
 async function getGitHubStars(): Promise<number | null> {
   try {
-    const res = await fetch("https://api.github.com/repos/diwenne/openreply", {
+    const res = await fetch("https://api.github.com/repos/treyyha/awlchat", {
       headers: { Accept: "application/vnd.github+json" },
       next: { revalidate: 3600 },
     });
@@ -292,8 +292,8 @@ export default async function Home() {
 
       <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3" aria-label="OpenReply home">
-            <span className="text-lg font-bold text-zinc-900">OpenReply</span>
+          <Link href="/" className="flex items-center gap-3" aria-label="AwlChat home">
+            <span className="text-lg font-bold text-zinc-900">AwlChat</span>
           </Link>
 
           <div className="flex items-center gap-4">
@@ -302,7 +302,7 @@ export default async function Home() {
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-600 transition hover:text-zinc-900"
-              aria-label="View OpenReply on GitHub"
+              aria-label="View AwlChat on GitHub"
             >
               <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 fill-current">
                 <path d={githubIconPath} />
@@ -484,8 +484,31 @@ export default async function Home() {
       </section>
 
       <footer className="border-t border-zinc-200 py-8">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 text-sm text-zinc-500 sm:px-6 lg:px-8">
-          <span className="font-semibold text-zinc-600">OpenReply</span>
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-5 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <div className="space-y-1">
+            <span className="font-semibold text-zinc-600">AwlChat</span>
+            <p className="max-w-xl text-xs leading-5 text-zinc-500">
+              Based on{" "}
+              <a
+                href="https://github.com/diwenne/openreply"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:text-zinc-900"
+              >
+                OpenReply
+              </a>{" "}
+              by Diwen Huang, originally forked from{" "}
+              <a
+                href="https://github.com/im-anishraj/instagram-comment-to-dm"
+                target="_blank"
+                rel="noreferrer"
+                className="underline underline-offset-2 hover:text-zinc-900"
+              >
+                instagram-comment-to-dm
+              </a>{" "}
+              by Anish Raj. MIT License.
+            </p>
+          </div>
           <a
             href={GITHUB_URL}
             target="_blank"

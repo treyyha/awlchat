@@ -18,7 +18,7 @@ export default function LegalShell({
       <header className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5">
           <Link href="/" className="flex items-center gap-3">
-            <span className="text-lg font-bold text-foreground">OpenReply</span>
+            <span className="text-lg font-bold text-foreground">AwlChat</span>
           </Link>
           <Link
             href="/login"
@@ -41,6 +41,27 @@ export default function LegalShell({
           {children}
         </div>
       </article>
+
+      <footer className="border-t border-border py-8">
+        <p className="mx-auto max-w-3xl px-5 text-xs leading-6 text-muted">
+          AwlChat is derived from{" "}
+          <a
+            href="https://github.com/diwenne/openreply"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            OpenReply
+          </a>
+          , originally forked from{" "}
+          <a
+            href="https://github.com/im-anishraj/instagram-comment-to-dm"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            instagram-comment-to-dm
+          </a>
+          . Released under the MIT License. Copyright notices are in the
+          repository LICENSE file.
+        </p>
+      </footer>
     </main>
   );
 }

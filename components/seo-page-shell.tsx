@@ -92,7 +92,7 @@ export default function SeoPageShell({ config }: { config: SeoPageConfig }) {
           <div className="mt-8 overflow-hidden border border-white/10">
             <div className="grid grid-cols-[0.8fr_1fr_1fr] border-b border-white/10 bg-zinc-950 text-xs font-bold uppercase tracking-wide text-zinc-500">
               <div className="p-4">Need</div>
-              <div className="p-4 text-cyan-100">OpenReply</div>
+              <div className="p-4 text-cyan-100">AwlChat</div>
               <div className="p-4">Generic automation</div>
             </div>
             {config.comparisons.map((item) => (
@@ -166,7 +166,7 @@ export default function SeoPageShell({ config }: { config: SeoPageConfig }) {
             Turn the next high-intent comment into a private reply
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-300">
-            OpenReply is built for Instagram professional accounts, official
+            AwlChat is built for Instagram professional accounts, official
             Meta private replies, and campaign reporting teams can show clients.
           </p>
           <Link
@@ -177,6 +177,13 @@ export default function SeoPageShell({ config }: { config: SeoPageConfig }) {
           </Link>
         </div>
       </section>
+
+      <footer className="border-t border-white/10 py-8">
+        <p className="mx-auto max-w-7xl px-5 text-xs leading-6 text-zinc-500 sm:px-6 lg:px-8">
+          AwlChat is based on OpenReply (MIT License), originally forked from
+          instagram-comment-to-dm.
+        </p>
+      </footer>
     </main>
   );
 }
