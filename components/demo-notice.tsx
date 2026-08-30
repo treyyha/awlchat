@@ -70,16 +70,16 @@ export function DemoNotice({ variant }: { variant: "banner" | "panel" }) {
 
   if (variant === "banner") {
     return (
-      <div className="relative border-b border-orange-200 bg-orange-50">
-        <p className="mx-auto w-full max-w-6xl px-10 py-2 text-center text-xs leading-5 text-zinc-700 sm:px-14 sm:text-sm">
-          <span className="font-bold text-zinc-900">{DEMO_HOST}</span> is a
+      <div className="relative border-b border-orange-200 bg-orange-50 dark:border-orange-800/60 dark:bg-orange-950/30">
+        <p className="mx-auto w-full max-w-6xl px-10 py-2 text-center text-xs leading-5 text-orange-950 dark:text-orange-100 sm:px-14 sm:text-sm">
+          <span className="font-bold text-orange-950 dark:text-orange-50">{DEMO_HOST}</span> is a
           demo. AwlChat is self-hosted — signing in here will not send DMs for
           your account.{" "}
           <a
             href={SETUP_DOCS_URL}
             target="_blank"
             rel="noreferrer"
-            className="font-bold text-orange-700 underline underline-offset-2 transition hover:text-orange-800"
+            className="font-bold text-orange-700 underline underline-offset-2 transition hover:text-orange-800 dark:text-orange-300 dark:hover:text-orange-200"
           >
             Deploy your own copy
           </a>
@@ -89,7 +89,7 @@ export function DemoNotice({ variant }: { variant: "banner" | "panel" }) {
           type="button"
           onClick={dismiss}
           aria-label="Dismiss demo notice"
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-zinc-500 transition hover:text-zinc-900 sm:right-4"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-orange-800/70 transition hover:text-orange-950 dark:text-orange-200/70 dark:hover:text-orange-50 sm:right-4"
         >
           <DismissIcon />
         </button>

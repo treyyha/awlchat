@@ -95,7 +95,7 @@ function Radio({
     >
       <span
         className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border ${
-          checked ? "border-accent" : "border-zinc-500"
+          checked ? "border-accent" : "border-zinc-500 dark:border-zinc-400"
         }`}
       >
         {checked && <span className="h-2 w-2 rounded-full bg-accent" />}
@@ -117,7 +117,7 @@ function Toggle({
       type="button"
       onClick={onToggle}
       className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-        on ? "bg-accent" : "bg-zinc-300"
+        on ? "bg-accent" : "bg-zinc-300 dark:bg-zinc-600"
       }`}
     >
       <span

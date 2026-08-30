@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { DemoNotice } from "@/components/demo-notice";
+import ThemeToggle from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "AwlChat - Instagram comment-to-DM automation",
@@ -287,21 +288,22 @@ async function getGitHubStars(): Promise<number | null> {
 export default async function Home() {
   const stars = await getGitHubStars();
   return (
-    <main className="min-h-screen bg-white text-zinc-900">
+    <main className="min-h-screen bg-background text-foreground">
       <DemoNotice variant="banner" />
 
-      <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white">
+      <header className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="AwlChat home">
-            <span className="text-lg font-bold text-zinc-900">AwlChat</span>
+            <span className="text-lg font-bold text-foreground">AwlChat</span>
           </Link>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle compact />
             <a
               href={GITHUB_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-600 transition hover:text-zinc-900"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-muted transition hover:text-foreground"
               aria-label="View AwlChat on GitHub"
             >
               <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 fill-current">
@@ -321,15 +323,15 @@ export default async function Home() {
 
       <section className="mx-auto grid w-full max-w-6xl items-center gap-10 px-5 pb-16 pt-12 sm:px-6 sm:pt-18 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:pb-24">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-600">
+          <div className="inline-flex items-center gap-2 border border-border bg-surface px-3 py-2 text-sm font-semibold text-muted">
             Open source · Official Meta API
           </div>
 
-          <h1 className="mt-7 text-balance text-5xl font-black leading-[1.02] text-zinc-900 sm:text-6xl lg:text-7xl">
+          <h1 className="mt-7 text-balance text-5xl font-black leading-[1.02] text-foreground sm:text-6xl lg:text-7xl">
             Make every comment start the right DM
           </h1>
 
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600">
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
             Open-sourced ManyChat. When someone comments your keyword on a post
             or reel, they get your DM a second later. Free, self-hosted, and
             built on the official Instagram API.
@@ -344,7 +346,7 @@ export default async function Home() {
             </Link>
             <a
               href="#how"
-              className="inline-flex items-center justify-center border border-zinc-200 bg-white px-6 py-3 text-sm font-bold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-100"
+              className="inline-flex items-center justify-center border border-border bg-surface px-6 py-3 text-sm font-bold text-foreground transition hover:border-border-hover hover:bg-surface-hover"
             >
               See how it works
             </a>
@@ -352,9 +354,9 @@ export default async function Home() {
 
           <dl className="mt-10 grid max-w-xl grid-cols-3 gap-3">
             {heroStats.map((stat) => (
-              <div key={stat.label} className="border border-zinc-200 bg-zinc-50 p-4">
-                <dt className="text-2xl font-black text-zinc-900">{stat.value}</dt>
-                <dd className="mt-1 text-xs leading-5 text-zinc-500">{stat.label}</dd>
+              <div key={stat.label} className="border border-border bg-surface p-4">
+                <dt className="text-2xl font-black text-foreground">{stat.value}</dt>
+                <dd className="mt-1 text-xs leading-5 text-muted">{stat.label}</dd>
               </div>
             ))}
           </dl>
@@ -372,10 +374,10 @@ export default async function Home() {
         <div className="grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
           <div>
             <p className="text-sm font-bold uppercase text-orange-600">How it works</p>
-            <h2 className="mt-3 text-4xl font-black leading-tight text-zinc-900 sm:text-5xl">
+            <h2 className="mt-3 text-4xl font-black leading-tight text-foreground sm:text-5xl">
               A comment in, a DM out
             </h2>
-            <p className="mt-5 text-base leading-8 text-zinc-600">
+            <p className="mt-5 text-base leading-8 text-muted">
               Three steps. Connect an account, build a campaign, and let it run.
               The webhook handles it live and the poll sweeps up whatever the
               webhook misses.
@@ -386,12 +388,12 @@ export default async function Home() {
             {flowSteps.map((step) => (
               <article
                 key={step.title}
-                className="grid gap-4 border border-zinc-200 bg-zinc-50 p-5 sm:grid-cols-[120px_1fr]"
+                className="grid gap-4 border border-border bg-surface p-5 sm:grid-cols-[120px_1fr]"
               >
                 <p className="text-sm font-bold text-orange-600">{step.eyebrow}</p>
                 <div>
-                  <h3 className="text-xl font-bold text-zinc-900">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-zinc-600">{step.description}</p>
+                  <h3 className="text-xl font-bold text-foreground">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted">{step.description}</p>
                 </div>
               </article>
             ))}
@@ -399,16 +401,16 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="border-y border-zinc-200 bg-zinc-50 py-20">
+      <section className="border-y border-border bg-surface py-20">
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8 lg:items-center">
           <DashboardPreview />
 
           <div>
             <p className="text-sm font-bold uppercase text-orange-600">The dashboard</p>
-            <h2 className="mt-3 text-4xl font-black leading-tight text-zinc-900 sm:text-5xl">
+            <h2 className="mt-3 text-4xl font-black leading-tight text-foreground sm:text-5xl">
               See exactly what happened
             </h2>
-            <p className="mt-5 text-base leading-8 text-zinc-600">
+            <p className="mt-5 text-base leading-8 text-muted">
               Every comment event is traceable: queued, matched, sent, skipped,
               failed, or rate-limited. No black box.
             </p>
@@ -419,10 +421,10 @@ export default async function Home() {
       <section id="features" className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-sm font-bold uppercase text-orange-600">What&rsquo;s included</p>
-          <h2 className="mt-3 text-4xl font-black leading-tight text-zinc-900 sm:text-5xl">
+          <h2 className="mt-3 text-4xl font-black leading-tight text-foreground sm:text-5xl">
             Everything, no tiers
           </h2>
-          <p className="mt-5 text-base leading-8 text-zinc-600">
+          <p className="mt-5 text-base leading-8 text-muted">
             It is self-hosted and open source, so there is nothing to unlock. You
             run it, you own it.
           </p>
@@ -432,7 +434,7 @@ export default async function Home() {
           {features.map((feature) => (
             <div
               key={feature}
-              className="border border-zinc-200 bg-zinc-50 p-4 text-sm font-semibold text-zinc-700"
+              className="border border-border bg-surface p-4 text-sm font-semibold text-foreground"
             >
               {feature}
             </div>
@@ -441,16 +443,16 @@ export default async function Home() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-5 pb-20 sm:px-6 lg:px-8">
-        <div className="grid gap-8 border border-orange-200 bg-orange-50 p-6 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="grid gap-8 border border-orange-200 bg-orange-50 p-6 dark:border-orange-800/60 dark:bg-orange-950/30 sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
-            <h2 className="max-w-3xl text-4xl font-black leading-tight text-zinc-900 sm:text-5xl">
+            <h2 className="max-w-3xl text-4xl font-black leading-tight text-foreground sm:text-5xl">
               Turn your next reel&rsquo;s comments into DMs
             </h2>
-            <p className="mt-4 text-base text-zinc-600">
+            <p className="mt-4 text-base text-muted">
               Free and open source. Star it if it saves you a subscription.
             </p>
-            <p className="mt-3 text-sm leading-6 text-zinc-600">
-              <span className="font-bold text-zinc-900">
+            <p className="mt-3 text-sm leading-6 text-muted">
+              <span className="font-bold text-foreground">
                 On your own deployment, not this one.
               </span>{" "}
               Clone the repo and follow the{" "}
@@ -458,7 +460,7 @@ export default async function Home() {
                 href={SETUP_DOCS_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="font-bold text-orange-700 underline underline-offset-2 transition hover:text-orange-800"
+                className="font-bold text-orange-700 underline underline-offset-2 transition hover:text-orange-800 dark:text-orange-300 dark:hover:text-orange-200"
               >
                 setup guide
               </a>{" "}
@@ -475,7 +477,7 @@ export default async function Home() {
             </Link>
             <a
               href={GITHUB_URL}
-              className="inline-flex items-center justify-center border border-zinc-200 bg-white px-6 py-3 text-sm font-bold text-zinc-900 transition hover:border-zinc-300 hover:bg-zinc-100"
+              className="inline-flex items-center justify-center border border-border bg-surface px-6 py-3 text-sm font-bold text-foreground transition hover:border-border-hover hover:bg-surface-hover"
             >
               View on GitHub
             </a>
@@ -483,17 +485,17 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-zinc-200 py-8">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-5 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <footer className="border-t border-border py-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-5 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <div className="space-y-1">
-            <span className="font-semibold text-zinc-600">AwlChat</span>
-            <p className="max-w-xl text-xs leading-5 text-zinc-500">
+            <span className="font-semibold text-foreground">AwlChat</span>
+            <p className="max-w-xl text-xs leading-5 text-muted">
               Based on{" "}
               <a
                 href="https://github.com/diwenne/openreply"
                 target="_blank"
                 rel="noreferrer"
-                className="underline underline-offset-2 hover:text-zinc-900"
+                className="underline underline-offset-2 hover:text-foreground"
               >
                 OpenReply
               </a>{" "}
@@ -502,7 +504,7 @@ export default async function Home() {
                 href="https://github.com/im-anishraj/instagram-comment-to-dm"
                 target="_blank"
                 rel="noreferrer"
-                className="underline underline-offset-2 hover:text-zinc-900"
+                className="underline underline-offset-2 hover:text-foreground"
               >
                 instagram-comment-to-dm
               </a>{" "}
@@ -513,7 +515,7 @@ export default async function Home() {
             href={GITHUB_URL}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 transition hover:text-zinc-900"
+            className="inline-flex items-center gap-2 transition hover:text-foreground"
           >
             <svg
               viewBox="0 0 16 16"

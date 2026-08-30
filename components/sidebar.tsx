@@ -8,6 +8,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ThemeToggle from "@/components/theme-toggle";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard" },
@@ -85,6 +86,10 @@ export default function Sidebar({
             );
           })}
         </nav>
+
+        <div className="px-3 pb-3">
+          <ThemeToggle />
+        </div>
 
         <div className="px-5 py-4 border-t border-border">
           <p className="text-sm text-foreground truncate">{workspaceName}</p>

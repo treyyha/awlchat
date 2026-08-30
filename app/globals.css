@@ -3,25 +3,55 @@
 /* ManyChat Alternative — Design System
    Plain and functional. No gradients, glass, glow, or animation. */
 
-@theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #18181b;
-  --color-surface: #f7f7f8;
-  --color-surface-hover: #efeff1;
-  --color-border: #e4e4e7;
-  --color-border-hover: #d4d4d8;
-  --color-muted: #71717a;
-  --color-accent: #f97316;
-  --color-accent-hover: #ea580c;
-  --color-success: #16a34a;
-  --color-error: #dc2626;
-  --color-warning: #d97706;
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: ui-monospace, monospace;
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+  --app-background: #ffffff;
+  --app-foreground: #18181b;
+  --app-surface: #f7f7f8;
+  --app-surface-hover: #efeff1;
+  --app-border: #e4e4e7;
+  --app-border-hover: #d4d4d8;
+  --app-muted: #71717a;
+  --app-accent: #f97316;
+  --app-accent-hover: #ea580c;
+  --app-success: #16a34a;
+  --app-error: #dc2626;
+  --app-warning: #d97706;
 }
 
-html {
-  color-scheme: light;
+.dark {
+  color-scheme: dark;
+  --app-background: #101216;
+  --app-foreground: #f4f4f5;
+  --app-surface: #191c23;
+  --app-surface-hover: #252a34;
+  --app-border: #303641;
+  --app-border-hover: #485160;
+  --app-muted: #a1a1aa;
+  --app-accent: #fb923c;
+  --app-accent-hover: #f97316;
+  --app-success: #4ade80;
+  --app-error: #f87171;
+  --app-warning: #fbbf24;
+}
+
+@theme inline {
+  --color-background: var(--app-background);
+  --color-foreground: var(--app-foreground);
+  --color-surface: var(--app-surface);
+  --color-surface-hover: var(--app-surface-hover);
+  --color-border: var(--app-border);
+  --color-border-hover: var(--app-border-hover);
+  --color-muted: var(--app-muted);
+  --color-accent: var(--app-accent);
+  --color-accent-hover: var(--app-accent-hover);
+  --color-success: var(--app-success);
+  --color-error: var(--app-error);
+  --color-warning: var(--app-warning);
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, monospace;
 }
 
 body {

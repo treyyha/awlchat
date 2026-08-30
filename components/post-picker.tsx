@@ -112,7 +112,7 @@ export default function PostPicker({
     return (
       <div className="text-center py-8">
         <p className="text-sm text-muted">{error}</p>
-        <p className="text-xs text-zinc-500 mt-1">Connect your Instagram account first</p>
+        <p className="mt-1 text-xs text-muted">Connect your Instagram account first</p>
       </div>
     );
   }

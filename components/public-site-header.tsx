@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ThemeToggle from "@/components/theme-toggle";
 
 interface PublicSiteHeaderProps {
   active?: "home" | "templates";
@@ -13,10 +14,10 @@ const navLinks = [
 
 export default function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-background/85">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/85">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3" aria-label="AwlChat home">
-          <span className="text-lg font-bold text-white">AwlChat</span>
+          <span className="text-lg font-bold text-foreground">AwlChat</span>
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">
@@ -25,7 +26,9 @@ export default function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
               key={link.key}
               href={link.href}
               className={`text-sm font-medium transition ${
-                active === link.key ? "text-white" : "text-zinc-400 hover:text-white"
+                active === link.key
+                  ? "text-foreground"
+                  : "text-muted hover:text-foreground"
               }`}
             >
               {link.label}
@@ -34,9 +37,10 @@ export default function PublicSiteHeader({ active }: PublicSiteHeaderProps) {
         </nav>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle compact />
           <Link
             href="/login"
-            className="hidden px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:text-white sm:inline-flex"
+            className="hidden px-4 py-2 text-sm font-semibold text-muted transition hover:text-foreground sm:inline-flex"
           >
             Sign in
           </Link>

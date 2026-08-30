@@ -1,6 +1,7 @@
 import { EMAIL_PROVIDER_ID, signIn } from "@/lib/auth";
 import { getCampaignTemplate } from "@/lib/templates/campaign-templates";
 import { DemoNotice } from "@/components/demo-notice";
+import ThemeToggle from "@/components/theme-toggle";
 
 export const metadata = {
   title: "Login - AwlChat",
@@ -33,7 +34,10 @@ export default async function LoginPage({
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
+    <div className="relative min-h-screen flex items-center justify-center px-6">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle compact />
+      </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-semibold text-foreground">

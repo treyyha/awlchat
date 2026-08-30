@@ -546,7 +546,7 @@ export default function CampaignsPage() {
                   onClick={() => toggleActive(auto.id, auto.isActive)}
                   className={`
                     relative w-11 h-6 rounded-full transition-colors
-                    ${auto.isActive ? "bg-accent" : "bg-zinc-300"}
+                    ${auto.isActive ? "bg-accent" : "bg-zinc-300 dark:bg-zinc-600"}
                   `}
                 >
                   <span
