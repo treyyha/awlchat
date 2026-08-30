@@ -173,6 +173,7 @@ export async function POST(request: NextRequest) {
           mediaId: event.mediaId,
           originalMediaId: event.originalMediaId,
           source: "WEBHOOK",
+          triggerType: "COMMENT",
         },
         {
           jobId: `comment_${event.instagramAccountId}_${event.commentId}`,
@@ -229,6 +230,7 @@ export async function POST(request: NextRequest) {
           messageId: event.messageId,
           messageText: event.messageText,
           senderId: event.senderId,
+          triggerType: event.triggerType,
         },
         {
           // Message ids can contain characters BullMQ rejects in a job id (":"

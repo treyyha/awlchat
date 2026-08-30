@@ -26,6 +26,7 @@ const INVALID_WEBHOOK_WINDOW = 60;
 const MAGIC_LINK_MAX = 5;
 const MAGIC_LINK_WINDOW = 15 * 60;
 const WEBHOOK_REPLAY_WINDOW = 24 * 60 * 60;
+const AUTOMATED_DM_DEDUP_TTL_SECONDS = 24 * 60 * 60;
 
 let redis: Redis | null = null;
 
@@ -294,6 +295,33 @@ export async function allowMagicLinkRequest(
 }
 
 /**
+ * Atomically reserve the 24-hour automated comment/Story DM cooldown for a
+ * user on an Instagram account. A true result means this worker owns the
+ * send; false means another automated trigger already sent one.
+ */
+export async function reserveAutomatedDmCooldown(
+  instagramAccountId: string,
+  userId: string
+): Promise<boolean> {
+  const client = getRedis();
+  const result = await client.set(
+    `dedup:automated-dm:${instagramAccountId}:${userId}`,
+    "1",
+    "EX",
+    AUTOMATED_DM_DEDUP_TTL_SECONDS,
+    "NX"
+  );
+  return result === "OK";
+}
+
+export async function releaseAutomatedDmCooldown(
+  instagramAccountId: string,
+  userId: string
+): Promise<void> {
+  await getRedis().del(`dedup:automated-dm:${instagramAccountId}:${userId}`);
+}
+
+/**
  * Claim an exact signed webhook payload for a short replay-protection window.
  * Meta payloads do not expose a stable delivery id in this route, so the
  * canonical raw body is used as the idempotency fingerprint.
@@ -328,4 +356,5 @@ export {
   MAGIC_LINK_MAX,
   MAGIC_LINK_WINDOW,
   WEBHOOK_REPLAY_WINDOW,
+  AUTOMATED_DM_DEDUP_TTL_SECONDS,
 };

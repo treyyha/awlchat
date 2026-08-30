@@ -374,6 +374,31 @@ describe("parseMessageEvents", () => {
         messageId: "mid_abc",
         messageText: "send me the LINK please",
         senderId: "user_999",
+        triggerType: "INBOUND_DM",
+      },
+    ]);
+  });
+
+  it("classifies Story replies separately from inbound DMs", () => {
+    const payload = messagingPayload([
+      {
+        sender: { id: "user_999" },
+        recipient: { id: "ig_456" },
+        message: {
+          mid: "mid_story",
+          text: "send me the LINK please",
+          reply_to: { story: { id: "story_123" } },
+        },
+      },
+    ]);
+
+    expect(parseMessageEvents(payload)).toEqual([
+      {
+        instagramAccountId: "ig_456",
+        messageId: "mid_story",
+        messageText: "send me the LINK please",
+        senderId: "user_999",
+        triggerType: "STORY_REPLY",
       },
     ]);
   });

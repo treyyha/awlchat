@@ -21,6 +21,10 @@ export function getRedisConnection(): Redis {
 // ─── DM Queue ───────────────────────────────────────────────────────────────────
 
 export type CommentSource = "WEBHOOK" | "POLLING";
+export type AutomatedDmTriggerType =
+  | "COMMENT"
+  | "STORY_REPLY"
+  | "INBOUND_DM";
 
 export interface ProcessCommentJob {
   instagramAccountId: string;
@@ -36,6 +40,7 @@ export interface ProcessCommentJob {
   // Which path enqueued this comment. Recorded in the shared ProcessedComment
   // dedup store so the reconciler can tell webhook- from polling-caught comments.
   source?: CommentSource;
+  triggerType: "COMMENT";
 }
 
 // Delivered when a user taps an opening DM's button — carries the reveal target.
@@ -64,6 +69,7 @@ export interface ProcessMessageJob {
   messageId: string;
   messageText: string;
   senderId: string;
+  triggerType: Exclude<AutomatedDmTriggerType, "COMMENT">;
 }
 
 export type DmQueueJob =
