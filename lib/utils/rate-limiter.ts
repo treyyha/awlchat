@@ -14,12 +14,18 @@
  * this value.
  */
 
+import { createHash } from "node:crypto";
 import Redis from "ioredis";
 
 const RATE_LIMIT_MAX = 750; // private replies per hour, per Meta's documented cap
 const RATE_LIMIT_WINDOW = 3600; // 1 hour in seconds
 const REQUEUE_DELAY_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_REQUEUE_ATTEMPTS = 3;
+const INVALID_WEBHOOK_MAX = 10;
+const INVALID_WEBHOOK_WINDOW = 60;
+const MAGIC_LINK_MAX = 5;
+const MAGIC_LINK_WINDOW = 15 * 60;
+const WEBHOOK_REPLAY_WINDOW = 24 * 60 * 60;
 
 let redis: Redis | null = null;
 
@@ -57,6 +63,23 @@ if next_count == 1 then
 end
 
 return {1, next_count, max - next_count}
+`;
+
+const RESERVE_WINDOW_SLOT_SCRIPT = `
+local current = tonumber(redis.call("GET", KEYS[1]) or "0")
+local max = tonumber(ARGV[1])
+local ttl = tonumber(ARGV[2])
+
+if current >= max then
+  return 0
+end
+
+local next_count = redis.call("INCR", KEYS[1])
+if next_count == 1 then
+  redis.call("EXPIRE", KEYS[1], ttl)
+end
+
+return 1
 `;
 
 function toScriptNumber(value: unknown): number {
@@ -222,5 +245,87 @@ export async function resetRateLimit(
   await client.del(key);
 }
 
+function hashIdentifier(identifier: string): string {
+  return createHash("sha256").update(identifier).digest("hex");
+}
+
+/**
+ * Reserve a slot in a generic fixed-window Redis counter.
+ * The identifier is hashed so proxy-provided values never become unbounded
+ * or directly readable Redis key material.
+ */
+export async function reserveRateLimitSlot(
+  namespace: string,
+  identifier: string,
+  max: number,
+  windowSeconds: number
+): Promise<boolean> {
+  const client = getRedis();
+  const result = await client.eval(
+    RESERVE_WINDOW_SLOT_SCRIPT,
+    1,
+    `rate:${namespace}:${hashIdentifier(identifier)}`,
+    max,
+    windowSeconds
+  );
+  return toScriptNumber(result) === 1;
+}
+
+export async function allowInvalidWebhookRequest(
+  sourceIdentifier: string
+): Promise<boolean> {
+  return reserveRateLimitSlot(
+    "webhook-invalid",
+    sourceIdentifier,
+    INVALID_WEBHOOK_MAX,
+    INVALID_WEBHOOK_WINDOW
+  );
+}
+
+export async function allowMagicLinkRequest(
+  sourceIdentifier: string
+): Promise<boolean> {
+  return reserveRateLimitSlot(
+    "magic-link",
+    sourceIdentifier,
+    MAGIC_LINK_MAX,
+    MAGIC_LINK_WINDOW
+  );
+}
+
+/**
+ * Claim an exact signed webhook payload for a short replay-protection window.
+ * Meta payloads do not expose a stable delivery id in this route, so the
+ * canonical raw body is used as the idempotency fingerprint.
+ */
+export async function claimWebhookDelivery(rawBody: string): Promise<boolean> {
+  const client = getRedis();
+  const fingerprint = createHash("sha256").update(rawBody).digest("hex");
+  const result = await client.set(
+    `webhook:delivery:${fingerprint}`,
+    "1",
+    "EX",
+    WEBHOOK_REPLAY_WINDOW,
+    "NX"
+  );
+  return result === "OK";
+}
+
+export async function releaseWebhookDelivery(rawBody: string): Promise<void> {
+  const client = getRedis();
+  const fingerprint = createHash("sha256").update(rawBody).digest("hex");
+  await client.del(`webhook:delivery:${fingerprint}`);
+}
+
 // Export constants for use in tests
-export { RATE_LIMIT_MAX, RATE_LIMIT_WINDOW, REQUEUE_DELAY_MS, MAX_REQUEUE_ATTEMPTS };
+export {
+  RATE_LIMIT_MAX,
+  RATE_LIMIT_WINDOW,
+  REQUEUE_DELAY_MS,
+  MAX_REQUEUE_ATTEMPTS,
+  INVALID_WEBHOOK_MAX,
+  INVALID_WEBHOOK_WINDOW,
+  MAGIC_LINK_MAX,
+  MAGIC_LINK_WINDOW,
+  WEBHOOK_REPLAY_WINDOW,
+};

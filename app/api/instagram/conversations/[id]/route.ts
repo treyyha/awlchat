@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentWorkspaceId } from "@/lib/auth";
 import { getWorkspaceInstagramAccount } from "@/lib/instagram-accounts";
-import { getConversationMessages, MetaApiError } from "@/lib/meta/client";
+import {
+  getConversationMessages,
+  getConversationParticipants,
+} from "@/lib/meta/client";
 import { decryptToken } from "@/lib/meta/oauth";
 
 export interface ThreadMessage {
@@ -43,6 +46,17 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
 
   try {
     const accessToken = decryptToken(account.accessToken);
+    const participants = await getConversationParticipants(
+      accessToken,
+      conversationId
+    );
+    if (!participants.some((participant) => participant.id === account.instagramId)) {
+      return NextResponse.json(
+        { success: false, error: "Conversation not found" },
+        { status: 404 }
+      );
+    }
+
     const raw = await getConversationMessages(accessToken, conversationId);
 
     // The API returns newest-first; reverse to read top-to-bottom.
@@ -60,8 +74,9 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     console.error("[Conversation Messages] Error:", err);
-    const message =
-      err instanceof MetaApiError ? err.message : "Failed to load messages";
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to load conversation messages" },
+      { status: 500 }
+    );
   }
 }

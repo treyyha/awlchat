@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/auth";
 import { prisma } from "@/lib/db/client";
 import { normalizeInvitationEmail } from "@/lib/workspace-invitations";
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
+  const session = await getCurrentSession();
   if (!session?.user?.id || !session.user.email) {
     return NextResponse.json(
       { success: false, error: "Sign in with the invited email first" },

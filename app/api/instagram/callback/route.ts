@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/auth";
 import { prisma } from "@/lib/db/client";
 import { getBaseUrl } from "@/lib/env";
 import { canConnectInstagramAccount } from "@/lib/instagram-accounts";
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${baseUrl}/settings?instagram=invalid`);
   }
 
-  const session = await auth();
+  const session = await getCurrentSession();
   if (!session?.user?.id) {
     return NextResponse.redirect(`${baseUrl}/login`);
   }
@@ -123,10 +123,6 @@ export async function GET(request: NextRequest) {
       })
       .catch(() => {});
 
-    return NextResponse.redirect(
-      `${baseUrl}/settings?instagram=failed&reason=${encodeURIComponent(
-        message.slice(0, 200)
-      )}`
-    );
+    return NextResponse.redirect(`${baseUrl}/settings?instagram=failed`);
   }
 }

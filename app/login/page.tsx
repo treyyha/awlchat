@@ -1,7 +1,11 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { EMAIL_PROVIDER_ID, signIn } from "@/lib/auth";
 import { getCampaignTemplate } from "@/lib/templates/campaign-templates";
 import { DemoNotice } from "@/components/demo-notice";
 import ThemeToggle from "@/components/theme-toggle";
+import { getRequestIp } from "@/lib/tracking/server";
+import { allowMagicLinkRequest } from "@/lib/utils/rate-limiter";
 
 export const metadata = {
   title: "Login - AwlChat",
@@ -27,6 +31,21 @@ export default async function LoginPage({
 
   async function sendMagicLink(formData: FormData) {
     "use server";
+    let allowed = true;
+    try {
+      const sourceIdentifier =
+        getRequestIp({ headers: await headers() }) ?? "unknown";
+      allowed = await allowMagicLinkRequest(sourceIdentifier);
+    } catch (error) {
+      // Authentication should remain available during a Redis outage, while
+      // callers still receive no implementation details.
+      console.error("[Login] Magic-link rate limiter failed:", error);
+    }
+
+    if (!allowed) {
+      redirect("/login?error=rate_limited");
+    }
+
     await signIn(EMAIL_PROVIDER_ID, {
       email: String(formData.get("email") ?? ""),
       redirectTo: callbackUrl,

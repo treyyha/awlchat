@@ -65,9 +65,11 @@ async function getMemberPayload(
   return {
     ...(currentUserRole ? { currentUserRole } : {}),
     members,
-    invitations: invitations.map((invitation) => ({
+    invitations: invitations.map(({ token, ...invitation }) => ({
       ...invitation,
-      inviteUrl: buildInvitationUrl(invitation.token),
+      ...(currentUserRole && canManageWorkspace(currentUserRole)
+        ? { token, inviteUrl: buildInvitationUrl(token) }
+        : {}),
     })),
   };
 }

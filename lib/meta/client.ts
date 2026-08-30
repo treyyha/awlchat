@@ -548,6 +548,21 @@ export async function getConversationMessages(
   return data.messages?.data ?? [];
 }
 
+export async function getConversationParticipants(
+  accessToken: string,
+  conversationId: string
+): Promise<InstagramParticipant[]> {
+  const url = new URL(`${instagramGraphBase()}/${conversationId}`);
+  url.searchParams.set("fields", "participants");
+  url.searchParams.set("access_token", accessToken);
+
+  const response = await fetch(url.toString());
+  const data = await handleResponse<{
+    participants?: { data: InstagramParticipant[] };
+  }>(response);
+  return data.participants?.data ?? [];
+}
+
 export async function getUserInfo(accessToken: string): Promise<InstagramUser> {
   const url = new URL(`${instagramGraphBase()}/me`);
   url.searchParams.set(

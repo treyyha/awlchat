@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { getDMQueue } from "@/lib/queue/client";
 import {
@@ -10,8 +11,22 @@ import {
 } from "@/lib/meta/webhook";
 import { MESSAGE_JOB_NAME, POSTBACK_JOB_NAME } from "@/lib/queue/client";
 import { Prisma } from "@/app/generated/prisma/client";
+import { getRequestIp } from "@/lib/tracking/server";
+import {
+  allowInvalidWebhookRequest,
+  claimWebhookDelivery,
+  releaseWebhookDelivery,
+} from "@/lib/utils/rate-limiter";
 
 const OPENING_DM_READ_FALLBACK_DELAY_MS = 5 * 60 * 1000;
+
+function timingSafeStringEqual(left: string | null, right: string | undefined) {
+  if (!left || !right) return false;
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  if (leftBuffer.length !== rightBuffer.length) return false;
+  return timingSafeEqual(leftBuffer, rightBuffer);
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -19,7 +34,10 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  if (mode === "subscribe" && token === process.env.WEBHOOK_VERIFY_TOKEN) {
+  if (
+    mode === "subscribe" &&
+    timingSafeStringEqual(token, process.env.WEBHOOK_VERIFY_TOKEN)
+  ) {
     return new NextResponse(challenge, { status: 200 });
   }
 
@@ -34,6 +52,32 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("x-hub-signature-256");
 
   if (!verifyWebhookSignature(rawBody, signature)) {
+    const sourceIdentifier = getRequestIp(request) ?? "unknown";
+    let shouldRecord = false;
+    let rateLimiterUnavailable = false;
+    try {
+      shouldRecord = await allowInvalidWebhookRequest(sourceIdentifier);
+    } catch (error) {
+      // Fail closed for diagnostic writes if Redis is unavailable. A forged
+      // request must never turn a Redis outage into an unbounded DB writer.
+      console.error("[Webhook] Invalid-signature rate limiter failed:", error);
+      rateLimiterUnavailable = true;
+    }
+
+    if (rateLimiterUnavailable) {
+      return NextResponse.json(
+        { success: false, error: "Invalid signature" },
+        { status: 401 }
+      );
+    }
+
+    if (!shouldRecord) {
+      return NextResponse.json(
+        { success: false, error: "Too many invalid webhook requests" },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
+    }
+
     // Record the attempt so a signature mismatch is visible rather than a
     // silent 401. This is the common symptom of FACEBOOK_APP_SECRET being
     // set to the wrong app's secret for the webhook's signing key.
@@ -57,26 +101,54 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  let isNewDelivery = true;
+  try {
+    isNewDelivery = await claimWebhookDelivery(rawBody);
+  } catch (error) {
+    // Replay protection is best-effort when Redis is unavailable. Continue
+    // processing the valid Meta delivery rather than dropping it.
+    console.error("[Webhook] Replay protection unavailable:", error);
+  }
+
+  if (!isNewDelivery) {
+    return NextResponse.json({ success: true, duplicate: true }, { status: 200 });
+  }
+
   let payload: unknown;
   try {
     payload = JSON.parse(rawBody);
   } catch {
+    await releaseWebhookDelivery(rawBody).catch((error) => {
+      console.error("[Webhook] Failed to release invalid delivery:", error);
+    });
     return NextResponse.json(
       { success: false, error: "Invalid JSON" },
       { status: 400 }
     );
   }
 
-  const webhookEvent = await prisma.webhookEvent.create({
-    data: {
-      object:
-        typeof payload === "object" && payload && "object" in payload
-          ? String(payload.object)
-          : null,
-      payload: payload as Prisma.InputJsonValue,
-      status: "PENDING",
-    },
-  });
+  let webhookEvent: { id: string };
+  try {
+    webhookEvent = await prisma.webhookEvent.create({
+      data: {
+        object:
+          typeof payload === "object" && payload && "object" in payload
+            ? String(payload.object)
+            : null,
+        payload: payload as Prisma.InputJsonValue,
+        status: "PENDING",
+      },
+    });
+  } catch (error) {
+    console.error("[Webhook] Failed to record delivery:", error);
+    await releaseWebhookDelivery(rawBody).catch((releaseError) => {
+      console.error("[Webhook] Failed to release delivery claim:", releaseError);
+    });
+    return NextResponse.json(
+      { success: false, error: "Webhook processing failed" },
+      { status: 500 }
+    );
+  }
 
   try {
     const commentEvents = parseCommentEvents(
@@ -239,13 +311,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    await prisma.webhookEvent.update({
-      where: { id: webhookEvent.id },
-      data: {
-        status: "FAILED",
-        errorMessage: message,
-        processedAt: new Date(),
-      },
+    await prisma.webhookEvent
+      .update({
+        where: { id: webhookEvent.id },
+        data: {
+          status: "FAILED",
+          errorMessage: message,
+          processedAt: new Date(),
+        },
+      })
+      .catch((recordError) => {
+        console.error("[Webhook] Failed to record processing failure:", recordError);
+      });
+    await releaseWebhookDelivery(rawBody).catch((releaseError) => {
+      console.error("[Webhook] Failed to release delivery claim:", releaseError);
     });
 
     return NextResponse.json(

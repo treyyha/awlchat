@@ -1230,6 +1230,7 @@ async function recordWorkerFailure(
     });
 
     await recordWorkerAlert({
+      workspaceId: account?.workspaceId,
       level: "error",
       message: error.message,
       jobId: job?.id,

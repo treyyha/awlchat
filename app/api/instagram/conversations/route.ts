@@ -4,7 +4,6 @@ import { getWorkspaceInstagramAccount } from "@/lib/instagram-accounts";
 import {
   getConversations,
   sendDirectMessage,
-  MetaApiError,
 } from "@/lib/meta/client";
 import { decryptToken } from "@/lib/meta/oauth";
 
@@ -85,11 +84,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     console.error("[Conversations] Error:", err);
-    const message =
-      err instanceof MetaApiError
-        ? err.message
-        : "Failed to load conversations";
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to load conversations" },
+      { status: 500 }
+    );
   }
 }
 
@@ -143,10 +141,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: result });
   } catch (err) {
     console.error("[Conversations] Send error:", err);
-    // Surface Meta's own message — the common case is the 24-hour messaging
-    // window having closed, which the user needs to see explicitly.
-    const message =
-      err instanceof MetaApiError ? err.message : "Failed to send message";
-    return NextResponse.json({ success: false, error: message }, { status: 502 });
+    return NextResponse.json(
+      { success: false, error: "Failed to send message" },
+      { status: 502 }
+    );
   }
 }

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/client";
 import { getWorkspaceInstagramAccount } from "@/lib/instagram-accounts";
 import { generateReportShareSlug } from "@/lib/reports/share";
 import { generateTrackedLinkSlug } from "@/lib/tracking/server";
+import { httpUrlSchema } from "@/lib/utils/http-url";
 import {
   canManageWorkspace,
   getCurrentWorkspaceContext,
@@ -11,13 +12,13 @@ import {
 
 const campaignSchema = z.object({
   postId: z.string().min(1),
-  postUrl: z.string().optional().nullable(),
+  postUrl: httpUrlSchema.or(z.literal("")).optional().nullable(),
   keywords: z.array(z.string().min(1).max(50)).min(1).max(10),
   dmMessage: z.string().min(1).max(1000),
   name: z.string().max(100).optional().nullable(),
   goal: z.string().max(120).optional().nullable(),
   publicReplyMessage: z.string().max(1000).optional().nullable(),
-  trackedUrl: z.string().optional().nullable(),
+  trackedUrl: httpUrlSchema.or(z.literal("")).optional().nullable(),
   wholeWordMatch: z.boolean().optional().default(true),
   isActive: z.boolean().optional().default(true),
 });
@@ -79,10 +80,7 @@ export async function POST(request: NextRequest) {
       continue;
     }
 
-    const validTrackedUrl =
-      campaign.trackedUrl && /^https?:\/\//i.test(campaign.trackedUrl)
-        ? campaign.trackedUrl
-        : null;
+    const validTrackedUrl = campaign.trackedUrl || null;
     const name =
       (campaign.name ?? "").trim().slice(0, 100) ||
       `Imported: ${campaign.keywords[0]}`;

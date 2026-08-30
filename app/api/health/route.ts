@@ -20,9 +20,10 @@ async function checkDatabase(): Promise<HealthCheck> {
     await prisma.$queryRaw`SELECT 1`;
     return { status: "ok" };
   } catch (error) {
+    console.error("[Health] Database check failed:", error);
     return {
       status: "error",
-      detail: error instanceof Error ? error.message : "Database check failed",
+      detail: "Database unavailable",
     };
   }
 }
@@ -30,11 +31,14 @@ async function checkDatabase(): Promise<HealthCheck> {
 async function checkRedis(): Promise<HealthCheck> {
   try {
     const pong = await getRedisConnection().ping();
-    return { status: pong === "PONG" ? "ok" : "error", detail: pong };
+    return pong === "PONG"
+      ? { status: "ok" }
+      : { status: "error", detail: "Redis unavailable" };
   } catch (error) {
+    console.error("[Health] Redis check failed:", error);
     return {
       status: "error",
-      detail: error instanceof Error ? error.message : "Redis check failed",
+      detail: "Redis unavailable",
     };
   }
 }
@@ -49,9 +53,10 @@ async function checkQueue(): Promise<HealthCheck & { counts?: unknown }> {
     );
     return { status: "ok", counts };
   } catch (error) {
+    console.error("[Health] Queue check failed:", error);
     return {
       status: "error",
-      detail: error instanceof Error ? error.message : "Queue check failed",
+      detail: "Queue unavailable",
     };
   }
 }
@@ -61,12 +66,15 @@ export async function GET() {
     checkDatabase(),
     checkRedis(),
     checkQueue(),
-    getWorkerHealth().catch((error) => ({
+    getWorkerHealth().catch((error) => {
+      console.error("[Health] Worker check failed:", error);
+      return {
       healthy: false,
       heartbeat: null,
       ageMs: null,
-      error: error instanceof Error ? error.message : "Worker check failed",
-    })),
+      error: "Worker unavailable",
+      };
+    }),
   ]);
 
   const healthy =

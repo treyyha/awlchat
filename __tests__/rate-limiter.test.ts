@@ -7,10 +7,11 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockGet, mockEval, mockDel } = vi.hoisted(() => ({
+const { mockGet, mockEval, mockDel, mockSet } = vi.hoisted(() => ({
   mockGet: vi.fn(),
   mockEval: vi.fn(),
   mockDel: vi.fn(),
+  mockSet: vi.fn(),
 }));
 
 vi.mock("ioredis", () => {
@@ -20,6 +21,7 @@ vi.mock("ioredis", () => {
     this.get = mockGet;
     this.eval = mockEval;
     this.del = mockDel;
+    this.set = mockSet;
     return this;
   });
   return { default: MockRedis };
@@ -32,6 +34,14 @@ import {
   incrementDMCounter,
   reserveDMSlot,
   RATE_LIMIT_MAX,
+  allowInvalidWebhookRequest,
+  allowMagicLinkRequest,
+  claimWebhookDelivery,
+  INVALID_WEBHOOK_MAX,
+  INVALID_WEBHOOK_WINDOW,
+  MAGIC_LINK_MAX,
+  MAGIC_LINK_WINDOW,
+  WEBHOOK_REPLAY_WINDOW,
 } from "../lib/utils/rate-limiter";
 
 beforeEach(() => {
@@ -132,5 +142,49 @@ describe("incrementDMCounter", () => {
 
     expect(mockEval).toHaveBeenCalled();
     expect(count).toBe(51);
+  });
+});
+
+describe("public request rate limits", () => {
+  it("denies an invalid webhook request when its IP window is full", async () => {
+    mockEval.mockResolvedValue(0);
+
+    await expect(allowInvalidWebhookRequest("203.0.113.10")).resolves.toBe(
+      false
+    );
+    expect(mockEval).toHaveBeenCalledWith(
+      expect.any(String),
+      1,
+      expect.stringMatching(/^rate:webhook-invalid:[a-f0-9]{64}$/),
+      INVALID_WEBHOOK_MAX,
+      INVALID_WEBHOOK_WINDOW
+    );
+  });
+
+  it("allows a magic-link request while its IP window has capacity", async () => {
+    mockEval.mockResolvedValue(1);
+
+    await expect(allowMagicLinkRequest("203.0.113.10")).resolves.toBe(true);
+    expect(mockEval).toHaveBeenCalledWith(
+      expect.any(String),
+      1,
+      expect.stringMatching(/^rate:magic-link:[a-f0-9]{64}$/),
+      MAGIC_LINK_MAX,
+      MAGIC_LINK_WINDOW
+    );
+  });
+
+  it("claims a webhook payload only once during the replay window", async () => {
+    mockSet.mockResolvedValueOnce("OK").mockResolvedValueOnce(null);
+
+    await expect(claimWebhookDelivery('{"entry":[]}')).resolves.toBe(true);
+    await expect(claimWebhookDelivery('{"entry":[]}')).resolves.toBe(false);
+    expect(mockSet).toHaveBeenLastCalledWith(
+      expect.stringMatching(/^webhook:delivery:[a-f0-9]{64}$/),
+      "1",
+      "EX",
+      WEBHOOK_REPLAY_WINDOW,
+      "NX"
+    );
   });
 });

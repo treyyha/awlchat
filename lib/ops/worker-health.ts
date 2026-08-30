@@ -1,7 +1,7 @@
 import { getRedisConnection } from "@/lib/queue/client";
 
 const WORKER_HEALTH_KEY = "health:worker:dm";
-const WORKER_ALERTS_KEY = "alerts:worker:dm";
+const WORKER_ALERTS_KEY_PREFIX = "alerts:worker:dm:";
 const WORKER_HEARTBEAT_TTL_SECONDS = 120;
 
 export interface WorkerHeartbeat {
@@ -20,6 +20,7 @@ export interface WorkerHealth {
 }
 
 export interface WorkerAlert {
+  workspaceId?: string;
   level: "warning" | "error";
   message: string;
   jobId?: string;
@@ -79,13 +80,17 @@ export async function recordWorkerAlert(alert: Omit<WorkerAlert, "createdAt">) {
   };
 
   const redis = getRedisConnection();
-  await redis.lpush(WORKER_ALERTS_KEY, JSON.stringify(payload));
-  await redis.ltrim(WORKER_ALERTS_KEY, 0, 24);
+  const key = `${WORKER_ALERTS_KEY_PREFIX}${alert.workspaceId ?? "global"}`;
+  await redis.lpush(key, JSON.stringify(payload));
+  await redis.ltrim(key, 0, 24);
 }
 
-export async function getWorkerAlerts(limit = 10): Promise<WorkerAlert[]> {
+export async function getWorkerAlerts(
+  workspaceId: string,
+  limit = 10
+): Promise<WorkerAlert[]> {
   const values = await getRedisConnection().lrange(
-    WORKER_ALERTS_KEY,
+    `${WORKER_ALERTS_KEY_PREFIX}${workspaceId}`,
     0,
     Math.max(0, limit - 1)
   );

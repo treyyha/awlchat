@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import InvitationAcceptCard from "@/components/invitation-accept-card";
-import { auth } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/auth";
 import { prisma } from "@/lib/db/client";
 
 type InvitePageProps = {
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default async function InvitePage({ params }: InvitePageProps) {
   const { token } = await params;
   const [session, invitation] = await Promise.all([
-    auth(),
+    getCurrentSession(),
     prisma.workspaceInvitation.findUnique({
       where: { token },
       include: {

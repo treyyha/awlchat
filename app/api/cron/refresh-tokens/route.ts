@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
         instagramAccountId: account.id,
         username: account.username,
         status: "failed",
-        error: errorMessage,
+        error: "Token refresh failed",
       });
     }
   }

@@ -11,7 +11,7 @@ export function hashClickIp(ipAddress: string | null | undefined) {
   return createHash("sha256").update(`${salt}:${ipAddress}`).digest("hex");
 }
 
-export function getRequestIp(request: Request) {
+export function getRequestIp(request: Pick<Request, "headers">) {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
     return forwardedFor.split(",")[0]?.trim() ?? null;

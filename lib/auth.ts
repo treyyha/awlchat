@@ -51,8 +51,16 @@ export const authConfig = {
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
 
-export async function getCurrentUserId(): Promise<string | null> {
+export async function getCurrentSession() {
   const session = await auth();
+  if (!session?.user?.id || !isEmailAllowedToSignIn(session.user.email)) {
+    return null;
+  }
+  return session;
+}
+
+export async function getCurrentUserId(): Promise<string | null> {
+  const session = await getCurrentSession();
   return session?.user?.id ?? null;
 }
 
