@@ -31,6 +31,7 @@ npm run worker
 Branch from `main`, keep the change focused on one thing, and make sure these pass:
 
 ```bash
+node scripts/check-git-hygiene.mjs
 npm run typecheck
 npm run lint
 npm test
@@ -38,6 +39,37 @@ npm run build
 ```
 
 If a check cannot run in your environment, say why in the pull request body. A small, clear pull request is easier to merge than a large one that touches many things at once.
+
+## Commits and secret hygiene
+
+Use a Conventional Commit subject with one of these types:
+
+```text
+feat: add a capability
+fix: correct broken behavior
+chore: maintain tooling or dependencies
+docs: update documentation
+refactor: change structure without changing behavior
+test: add or update tests
+```
+
+Optional scopes are supported, for example:
+
+```text
+feat(auth): restrict sign-in to allowed emails
+```
+
+The versioned `.githooks/commit-msg` hook validates this format. Enable it for
+your local clone with:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Before staging, run `node scripts/check-git-hygiene.mjs`. Stage only the files related to
+the change, never `.env`, `.env.local`, credentials, or API keys, and run the
+check again after staging. The checker rejects tracked environment files,
+secret-named files, and common secret signatures in staged content.
 
 ## A note on the codebase
 
