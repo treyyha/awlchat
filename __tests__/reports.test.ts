@@ -8,10 +8,12 @@ const { mockPrisma } = vi.hoisted(() => ({
     dmLog: {
       groupBy: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       count: vi.fn(),
     },
     linkClick: {
       count: vi.fn(),
+      findMany: vi.fn(),
     },
   },
 }));
@@ -68,6 +70,8 @@ beforeEach(() => {
     dmSentAt: new Date("2026-05-20T12:00:00.000Z"),
     createdAt: new Date("2026-05-20T12:00:00.000Z"),
   });
+  mockPrisma.dmLog.findMany.mockResolvedValue([]);
+  mockPrisma.linkClick.findMany.mockResolvedValue([]);
   mockPrisma.dmLog.count.mockResolvedValue(2);
 });
 

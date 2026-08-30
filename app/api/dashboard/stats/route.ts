@@ -7,6 +7,10 @@ import {
   summarizeDmStatuses,
 } from "@/lib/tracking/analytics";
 
+function localDateKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
 export async function GET(request: NextRequest) {
   const workspaceId = await getCurrentWorkspaceId();
   if (!workspaceId) {
@@ -20,6 +24,8 @@ export async function GET(request: NextRequest) {
 
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
   const weekStart = new Date(todayStart);
   weekStart.setDate(weekStart.getDate() - 7);
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -42,6 +48,7 @@ export async function GET(request: NextRequest) {
     dmsSentToday,
     dmsSentWeek,
     dmsSentMonth,
+    dailySentRows,
     totalDMs,
     dmStatusCountsThisMonth,
     clicksThisMonth,
@@ -109,6 +116,15 @@ export async function GET(request: NextRequest) {
         ...accountFilter,
       },
     }),
+    prisma.dmLog.findMany({
+      where: {
+        workspaceId,
+        status: "SENT",
+        createdAt: { gte: weekStart, lt: tomorrowStart },
+        ...accountFilter,
+      },
+      select: { createdAt: true },
+    }),
     prisma.dmLog.count({
       where: { workspaceId, status: "SENT", ...accountFilter },
     }),
@@ -149,25 +165,20 @@ export async function GET(request: NextRequest) {
     }),
   ]);
 
+  const dailySentCounts = new Map<string, number>();
+  for (const row of dailySentRows) {
+    const key = localDateKey(row.createdAt);
+    dailySentCounts.set(key, (dailySentCounts.get(key) ?? 0) + 1);
+  }
+
   const dailyDMs: { date: string; count: number }[] = [];
   for (let i = 6; i >= 0; i--) {
     const dayStart = new Date(todayStart);
     dayStart.setDate(dayStart.getDate() - i);
-    const dayEnd = new Date(dayStart);
-    dayEnd.setDate(dayEnd.getDate() + 1);
-
-    const count = await prisma.dmLog.count({
-      where: {
-        workspaceId,
-        status: "SENT",
-        createdAt: { gte: dayStart, lt: dayEnd },
-        ...accountFilter,
-      },
-    });
 
     dailyDMs.push({
       date: dayStart.toLocaleDateString("en-US", { weekday: "short" }),
-      count,
+      count: dailySentCounts.get(localDateKey(dayStart)) ?? 0,
     });
   }
 

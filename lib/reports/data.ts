@@ -116,38 +116,54 @@ export async function getCampaignReportBySlug(shareSlug: string) {
       _count: row._count._all,
     }))
   );
-  const daily = await Promise.all(
-    Array.from({ length: 7 }, async (_, index) => {
-      const daysAgo = 6 - index;
-      const { start, end } = getDayWindow(daysAgo);
-      const [sent, clicks] = await Promise.all([
-        prisma.dmLog.count({
-          where: {
-            workspaceId: automation.workspaceId,
-            automationId: automation.id,
-            status: "SENT",
-            createdAt: { gte: start, lt: end },
-          },
-        }),
-        prisma.linkClick.count({
-          where: {
-            workspaceId: automation.workspaceId,
-            automationId: automation.id,
-            createdAt: { gte: start, lt: end },
-          },
-        }),
-      ]);
-
-      return {
-        date: start.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
-        sent,
-        clicks,
-      };
-    })
+  const dailyWindows = Array.from({ length: 7 }, (_, index) =>
+    getDayWindow(6 - index)
   );
+  const dailyStart = dailyWindows[0].start;
+  const dailyEnd = dailyWindows[dailyWindows.length - 1].end;
+  const [dailySentRows, dailyClickRows] = await Promise.all([
+    prisma.dmLog.findMany({
+      where: {
+        workspaceId: automation.workspaceId,
+        automationId: automation.id,
+        status: "SENT",
+        createdAt: { gte: dailyStart, lt: dailyEnd },
+      },
+      select: { createdAt: true },
+    }),
+    prisma.linkClick.findMany({
+      where: {
+        workspaceId: automation.workspaceId,
+        automationId: automation.id,
+        createdAt: { gte: dailyStart, lt: dailyEnd },
+      },
+      select: { createdAt: true },
+    }),
+  ]);
+
+  function countRowsByDay(rows: Array<{ createdAt: Date }>) {
+    const counts = new Map<string, number>();
+    for (const row of rows) {
+      const date = row.createdAt;
+      const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  }
+
+  const dailySentCounts = countRowsByDay(dailySentRows);
+  const dailyClickCounts = countRowsByDay(dailyClickRows);
+  const daily = dailyWindows.map(({ start }) => {
+    const key = `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}`;
+    return {
+      date: start.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+      sent: dailySentCounts.get(key) ?? 0,
+      clicks: dailyClickCounts.get(key) ?? 0,
+    };
+  });
 
   return {
     shareSlug: automation.reportShareSlug,

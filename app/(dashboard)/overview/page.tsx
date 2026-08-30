@@ -9,10 +9,14 @@
  */
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import AccountSelect from "@/components/account-select";
 import StatCard from "@/components/stat-card";
-import FollowerChart from "@/components/follower-chart";
 import type { OverviewResponse } from "@/app/api/instagram/overview/route";
+
+const FollowerChart = dynamic(() => import("@/components/follower-chart"), {
+  loading: () => <div className="panel h-72 rounded p-4 sm:p-6" />,
+});
 
 function formatNumber(n: number | null): string {
   if (n === null) return "—";
