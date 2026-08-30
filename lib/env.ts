@@ -15,7 +15,24 @@ export function requireEnv(name: string): string {
 }
 
 export function getBaseUrl(): string {
-  return process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const configuredUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
+  const deploymentHost = process.env.VERCEL_URL
+    ?.replace(/^https?:\/\//, "")
+    .replace(/\/$/, "");
+
+  if (process.env.VERCEL_ENV === "preview" && deploymentHost) {
+    return `https://${deploymentHost}`;
+  }
+
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, "");
+  }
+
+  if (deploymentHost) {
+    return `https://${deploymentHost}`;
+  }
+
+  return "http://localhost:3000";
 }
 
 export function getEncryptionKeyHex(): string {
